@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">LOTR Journeys Editor</string>
+    <string name="usage_warning">Please note: This is an experimental app. Use at your own risk.</string>
+    <string name="app_located_on_device">Lord Of the Rings - Journeys In Middle-earth was found on this device</string>
+    <string name="app_not_located_on_device">Lord Of the Rings - Journeys In Middle-earth was not found on this device</string>
+    <string name="game_difficulty_hard">Hard</string>
+    <string name="game_difficulty_normal">Normal</string>
+    <string name="game_chapter">Chapter: %d</string>
 </resources>
