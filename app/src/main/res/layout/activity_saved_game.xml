@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/saved_game_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:context=".SavedGame">
+
+        <TextView
+            android:id="@+id/party_name_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/party_name"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:labelFor="@id/party_name"/>
+
+        <EditText
+            android:id="@+id/party_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:inputType="textPersonName"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/last_stands_label"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBaseline_toBaselineOf="@id/party_name_label"
+            android:maxLength="30"
+            tools:text="Funky Monkeys"/>
+
+
+        <TextView
+            android:id="@+id/lore_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:text="@string/lore"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/party_name_label"
+            android:labelFor="@id/party_lore"/>
+
+
+
+        <EditText
+            android:id="@+id/party_lore"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="8dp"
+            android:layout_marginEnd="8dp"
+            android:inputType="numberDecimal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/party_name"
+            app:layout_constraintTop_toBottomOf="@id/party_name"
+            app:layout_constraintBaseline_toBaselineOf="@id/lore_label"
+            tools:text="50"/>
+
+        <TextView
+            android:id="@+id/last_stands_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:text="@string/last_stands_failed"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lore_label"
+            android:labelFor="@id/last_stands"/>
+
+        <EditText
+            android:id="@+id/last_stands"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="8dp"
+            android:layout_marginEnd="8dp"
+            android:inputType="numberDecimal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/party_lore"
+            app:layout_constraintTop_toBottomOf="@id/party_lore"
+            app:layout_constraintBaseline_toBaselineOf="@id/last_stands_label"
+            tools:text="50"/>
+
+        <TextView
+            android:id="@+id/chapter_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:text="@string/current_chapter"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/last_stands_label"
+            android:labelFor="@id/current_chapter"/>
+
+        <Spinner
+            android:id="@+id/current_chapter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="@id/party_name"
+            app:layout_constraintTop_toBottomOf="@id/party_lore"
+            android:layout_centerHorizontal="true"
+            app:layout_constraintBaseline_toBaselineOf="@id/chapter_label"/>
+
+        <TextView
+            android:id="@+id/difficulty_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:text="@string/difficulty"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/chapter_label"
+            android:labelFor="@id/game_difficulty"/>
+
+
+        <Spinner
+            android:id="@+id/game_difficulty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="@id/party_name"
+            app:layout_constraintTop_toBottomOf="@id/current_chapter"
+            android:layout_centerHorizontal="true"
+            app:layout_constraintBaseline_toBaselineOf="@id/difficulty_label"/>
+
+
+
+
+        <TextView
+            android:id="@+id/saved_game_idx"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="28dp"
+            android:layout_marginTop="8dp"
+            tools:text="7"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

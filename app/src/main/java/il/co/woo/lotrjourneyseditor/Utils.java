@@ -23,6 +23,8 @@ import java.util.List;
 
 class Utils {
 
+    public static final String INTENT_EXTRA_SAVE_GAME_ID_KEY = "SAVED_GAME_ID";
+
     private static final String TAG = "Utils";
     private static final String LOTR_PKG_NAME = "com.fantasyflightgames.jime";
     private static final String LOTR_FILE_PATH = "Android/data/" + LOTR_PKG_NAME;
@@ -37,14 +39,14 @@ class Utils {
     private static final String TIME_DIV = "10000";
 
     private static final String FFG_DIFFICULTY = "CampaignDifficulty";
-    static final int GAME_NORMAL = 0;
+    private static final int GAME_NORMAL = 0;
     static final int GAME_HARD = 1;
 
-    private static final String FFG_PRTY_NAME = "PartyName";
+    private static final String FFG_PARTY_NAME = "PartyName";
 
     private static final String FFG_CHAPTER = "CurrentAdventureId";
 
-    private static final String FFG_HEROSINFO_ARRAY = "HeroInfo";
+    private static final String FFG_HEROINFO_ARRAY = "HeroInfo";
     private static final String FFG_HEROINFO_ID = "Id";
     static final int FFG_HERO_ID_INVALID = -1;
     static final int FFG_HERO_ID_ARAGORN = 1;
@@ -54,9 +56,92 @@ class Utils {
     static final int FFG_HERO_ID_GIMLI = 5;
     static final int FFG_HERO_ID_LEGOLAS = 6;
 
+    private static final String FFG_GLOBAL_VARS = "GlobalVarData";
+    private static final String FFG_INT_VARS = "IntVars";
+
+    private static final String FFS_LAST_STAND = "LastStandsFailed";
+
+    private static final String FFG_NAME  = "Name";
+    private static final String FFG_VALUE = "Value";
+    private static final String FFG_CAMP_LORE = "Campaign/Lore";
+
+    private static final String FFG_AVAIL_XP = "AvailableXP";
+    private static final String FFG_XP = "XP";
+
 
 
     private static ArrayList<JSONObject> mSavedGames = null;
+
+    static int getSaveGameHeroXP(int savedGameId,int heroIdx) {
+        //get the saved game
+        JSONObject savedGame = getSavedGame(savedGameId);
+        if ((savedGame == null) || (heroIdx < 0))
+            return FFG_HERO_ID_INVALID;
+
+        int numOfHeros = 0;
+        try {
+
+            JSONArray jsonArr = savedGame.getJSONArray(FFG_HEROINFO_ARRAY);
+            if (heroIdx >= jsonArr.length())
+                return FFG_HERO_ID_INVALID;
+
+
+            JSONObject jsonHero = jsonArr.getJSONObject(heroIdx);
+            if (jsonHero != null) {
+                JSONArray availXP = jsonHero.getJSONArray(FFG_AVAIL_XP);
+                JSONObject values = availXP.getJSONObject(0);
+                return values.getInt(FFG_XP);
+
+            }
+
+        } catch (JSONException e) {
+            Log.d(TAG, "getSaveGameHeroXP: JSON error. Could not get '" + FFG_HEROINFO_ARRAY + "' from saved game");
+        }
+
+        return 0;
+    }
+    static int getSavedGameLastStands(int savedGameId) {
+        //get the saved game
+        JSONObject savedGame = getSavedGame(savedGameId);
+        if (savedGame == null)
+            return 0;
+
+        int numberOfLastStandsFailed = 0;
+        try {
+            numberOfLastStandsFailed = savedGame.getInt(FFS_LAST_STAND);
+        } catch (JSONException e) {
+            Log.d(TAG, "getSavedGameLastStands: JSON error. Could not get '" + FFS_LAST_STAND + "' from saved game");
+        }
+
+        return numberOfLastStandsFailed;
+
+    }
+
+    static int getSavedGameLore(int savedGameId) {
+        //get the saved game
+        JSONObject savedGame = getSavedGame(savedGameId);
+        if (savedGame == null)
+            return 0;
+
+        try {
+
+            JSONObject jsonObjGlobalVars = savedGame.getJSONObject(FFG_GLOBAL_VARS);
+            JSONArray jsonArr = jsonObjGlobalVars.getJSONArray(FFG_INT_VARS);
+
+            for (int i = 0; i < jsonArr.length(); i++) {
+                JSONObject jsonObj = jsonArr.getJSONObject(i);
+                if (jsonObj.getString(FFG_NAME).compareTo(FFG_CAMP_LORE) == 0) {
+                    return jsonObj.getInt(FFG_VALUE);
+                }
+
+            }
+
+        } catch (JSONException e) {
+            Log.d(TAG, "getSavedGameHeroType: JSON error. Could not get '" + FFG_GLOBAL_VARS + "' from saved game");
+        }
+        return 0;
+
+    }
 
     static int getSavedGameHeroType(int savedGameId, int heroIdx) {
         //get the saved game
@@ -67,7 +152,7 @@ class Utils {
         int numOfHeros = 0;
         try {
 
-            JSONArray jsonArr = savedGame.getJSONArray(FFG_HEROSINFO_ARRAY);
+            JSONArray jsonArr = savedGame.getJSONArray(FFG_HEROINFO_ARRAY);
             if (heroIdx >= jsonArr.length())
                 return FFG_HERO_ID_INVALID;
 
@@ -78,7 +163,7 @@ class Utils {
             }
 
         } catch (JSONException e) {
-            Log.d(TAG, "getSavedGameHeroType: JSON error. Could not get '" + FFG_HEROSINFO_ARRAY + "' from saved game");
+            Log.d(TAG, "getSavedGameHeroType: JSON error. Could not get '" + FFG_HEROINFO_ARRAY + "' from saved game");
         }
 
         return 0;
@@ -93,11 +178,11 @@ class Utils {
         int numOfHeros = 0;
         try {
 
-            JSONArray jsonArr = savedGame.getJSONArray(FFG_HEROSINFO_ARRAY);
+            JSONArray jsonArr = savedGame.getJSONArray(FFG_HEROINFO_ARRAY);
             return jsonArr.length();
 
         } catch (JSONException e) {
-            Log.d(TAG, "getSavedGameNumOfHeroes: JSON error. Could not get '" + FFG_HEROSINFO_ARRAY + "' from saved game");
+            Log.d(TAG, "getSavedGameNumOfHeroes: JSON error. Could not get '" + FFG_HEROINFO_ARRAY + "' from saved game");
         }
 
         return 0;
@@ -127,9 +212,9 @@ class Utils {
             return "";
 
         try {
-            return savedGame.getString(FFG_PRTY_NAME);
+            return savedGame.getString(FFG_PARTY_NAME);
         } catch (JSONException e) {
-            Log.d(TAG, "getSavedGamePartyName: JSON error. Could not get '" + FFG_PRTY_NAME + "' from saved game");
+            Log.d(TAG, "getSavedGamePartyName: JSON error. Could not get '" + FFG_PARTY_NAME + "' from saved game");
         }
 
         return "";
@@ -207,8 +292,8 @@ class Utils {
     private static void initSavedGameArray() {
         mSavedGames = new ArrayList<>();
         String[] filePaths = getValidSavedGamePaths();
-        for (int i = 0; i < filePaths.length; i++) {
-           mSavedGames.add(readSavedGame(new File(filePaths[i] + "/" + SAVE_FILE_A_NAME)));
+        for (String filePath : filePaths) {
+            mSavedGames.add(readSavedGame(new File(filePath + "/" + SAVE_FILE_A_NAME)));
         }
     }
 

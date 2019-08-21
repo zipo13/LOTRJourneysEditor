@@ -6,6 +6,8 @@ import androidx.constraintlayout.widget.ConstraintSet;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -30,7 +32,9 @@ public class MainActivity extends AppCompatActivity {
     private static String HERO_IMG_NAME_PREFIX = "hero_";
     private static final String DRAWABLE_TYPE = "drawable";
 
-    private static final int HEROS_IMAGE_ID_BASE = 716865;
+    private static final int HEROES_IMAGE_ID_BASE = 716865;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,13 +85,11 @@ public class MainActivity extends AppCompatActivity {
 
             //to get the MainLayout
             //View view = inflater.inflate(R.layout.save_game_panel, null);
-            View container = getWindow().getDecorView().getRootView();
             View inflatedLayout = inflater.inflate(R.layout.save_game_panel, mainView,false);
             inflatedLayout.setId(INFLATED_PANELS_BASE_ID + i);
             mainView.addView(inflatedLayout);
             ConstraintSet set = new ConstraintSet();
             set.clone(mainView);
-            int mainID = mainView.getId();
             set.connect(inflatedLayout.getId(),ConstraintSet.LEFT,mainView.getId(),ConstraintSet.LEFT,Utils.convertDpToPixel(8,this));
             set.connect(inflatedLayout.getId(),ConstraintSet.RIGHT,mainView.getId(),ConstraintSet.RIGHT,Utils.convertDpToPixel(8,this));
             set.connect(inflatedLayout.getId(),ConstraintSet.TOP,lastId,ConstraintSet.BOTTOM,Utils.convertDpToPixel(8,this));
@@ -123,20 +125,30 @@ public class MainActivity extends AppCompatActivity {
             int numberOfHeros = Utils.getSavedGameNumOfHeroes(i);
             LinearLayout heroslayout = inflatedLayout.findViewById(R.id.heroes_img_container);
             for (int j = 0; j < numberOfHeros; j++) {
-                int imgeResId = getHeroResIDFromHeroIdx(Utils.getSavedGameHeroType(i,j));
-                ImageView ivHero = createImageView(HEROS_IMAGE_ID_BASE + i*10+j,80,80,imgeResId);
+                int imgResId = getHeroResIDFromHeroIdx(this,Utils.getSavedGameHeroType(i,j));
+                ImageView ivHero = createImageView(HEROES_IMAGE_ID_BASE + i*10+j,80,80,imgResId);
                 heroslayout.addView(ivHero);
             }
+
+            final int currentSavedGameIdx = i;
+            inflatedLayout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent savedGameIntent = new Intent(MainActivity.this,SavedGame.class);
+                    savedGameIntent.putExtra(Utils.INTENT_EXTRA_SAVE_GAME_ID_KEY,currentSavedGameIdx);
+                    startActivity(savedGameIntent);
+                }
+            });
 
         }
     }
 
-    private int getHeroResIDFromHeroIdx(int heroIdx) {
+    public static int getHeroResIDFromHeroIdx(Context context, int heroIdx) {
         //Generate the resource name
         String tileFileName = HERO_IMG_NAME_PREFIX + heroIdx;
 
         //locate the id
-        return getResources().getIdentifier(tileFileName, DRAWABLE_TYPE,getPackageName());
+        return context.getResources().getIdentifier(tileFileName, DRAWABLE_TYPE,context.getPackageName());
     }
 
 

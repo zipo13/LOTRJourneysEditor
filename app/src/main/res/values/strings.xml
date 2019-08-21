@@ -6,4 +6,31 @@
     <string name="game_difficulty_hard">Hard</string>
     <string name="game_difficulty_normal">Normal</string>
     <string name="game_chapter">Chapter: %d</string>
+    <string name="party_name">Party Name:</string>
+    <string name="lore">Lore:</string>
+    <string name="current_chapter">Current Chapter:</string>
+    <string name="difficulty">Difficulty:</string>
+    <string name="last_stands_failed">Last Stands Failed:</string>
+    <string name="xp">XP</string>
+    <string name="hero_image">Hero Image</string>
+    <string-array name="chapter_names">
+        <item>Chapter 1</item>
+        <item>Chapter 2</item>
+        <item>Chapter 3</item>
+        <item>Chapter 4</item>
+        <item>Chapter 5</item>
+        <item>Chapter 6</item>
+        <item>Chapter 7</item>
+        <item>Chapter 8</item>
+        <item>Chapter 9</item>
+        <item>Chapter 10</item>
+        <item>Chapter 11</item>
+        <item>Chapter 12</item>
+        <item>Chapter 13</item>
+        <item>Chapter 14</item>
+    </string-array>
+    <string-array name="difficulty_names">
+        <item>Normal</item>
+        <item>Hard</item>
+    </string-array>
 </resources>
