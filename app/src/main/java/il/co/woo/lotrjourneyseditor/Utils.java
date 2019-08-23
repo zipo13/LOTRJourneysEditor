@@ -69,30 +69,16 @@ class Utils {
     private static final String FFG_XP = "XP";
 
 
-
     private static ArrayList<JSONObject> mSavedGames = null;
 
     static int getSaveGameHeroXP(int savedGameId,int heroIdx) {
         //get the saved game
-        JSONObject savedGame = getSavedGame(savedGameId);
-        if ((savedGame == null) || (heroIdx < 0))
+        JSONObject heroXpObj = getSaveGameHeroXPObj(savedGameId,heroIdx);
+        if (heroXpObj == null)
             return FFG_HERO_ID_INVALID;
 
-        int numOfHeros = 0;
         try {
-
-            JSONArray jsonArr = savedGame.getJSONArray(FFG_HEROINFO_ARRAY);
-            if (heroIdx >= jsonArr.length())
-                return FFG_HERO_ID_INVALID;
-
-
-            JSONObject jsonHero = jsonArr.getJSONObject(heroIdx);
-            if (jsonHero != null) {
-                JSONArray availXP = jsonHero.getJSONArray(FFG_AVAIL_XP);
-                JSONObject values = availXP.getJSONObject(0);
-                return values.getInt(FFG_XP);
-
-            }
+                return heroXpObj.getInt(FFG_XP);
 
         } catch (JSONException e) {
             Log.d(TAG, "getSaveGameHeroXP: JSON error. Could not get '" + FFG_HEROINFO_ARRAY + "' from saved game");
@@ -100,15 +86,59 @@ class Utils {
 
         return 0;
     }
-    static int getSavedGameLastStands(int savedGameId) {
+
+    static void setSaveGameHeroXP(int savedGameId,int heroIdx,int xp) {
+        //get the saved game
+        JSONObject heroXpObj = getSaveGameHeroXPObj(savedGameId,heroIdx);
+        if (heroXpObj == null)
+            return;
+
+        try {
+            heroXpObj.put(FFG_XP,xp);
+
+        } catch (JSONException e) {
+            Log.d(TAG, "setSaveGameHeroXP: JSON error. Could not get '" + FFG_HEROINFO_ARRAY + "' from saved game");
+        }
+    }
+
+    private static JSONObject getSaveGameHeroXPObj(int savedGameId,int heroIdx) {
         //get the saved game
         JSONObject savedGame = getSavedGame(savedGameId);
-        if (savedGame == null)
+        if ((savedGame == null) || (heroIdx < 0))
+            return null;
+
+        int numOfHeros = 0;
+        try {
+
+            JSONArray jsonArr = savedGame.getJSONArray(FFG_HEROINFO_ARRAY);
+            if (heroIdx >= jsonArr.length())
+                return null;
+
+
+            JSONObject jsonHero = jsonArr.getJSONObject(heroIdx);
+            if (jsonHero != null) {
+                JSONArray availXP = jsonHero.getJSONArray(FFG_AVAIL_XP);
+                return availXP.getJSONObject(0);
+
+            }
+
+        } catch (JSONException e) {
+            Log.d(TAG, "getSaveGameHeroXP: JSON error. Could not get '" + FFG_HEROINFO_ARRAY + "' from saved game");
+        }
+
+        return null;
+    }
+
+
+    static int getSavedGameLastStands(int savedGameId) {
+        //get the saved game
+        JSONObject lastStandObj = getSavedGameLastStandsObj(savedGameId);
+        if (lastStandObj == null)
             return 0;
 
         int numberOfLastStandsFailed = 0;
         try {
-            numberOfLastStandsFailed = savedGame.getInt(FFS_LAST_STAND);
+            numberOfLastStandsFailed = lastStandObj.getInt(FFS_LAST_STAND);
         } catch (JSONException e) {
             Log.d(TAG, "getSavedGameLastStands: JSON error. Could not get '" + FFS_LAST_STAND + "' from saved game");
         }
@@ -117,11 +147,58 @@ class Utils {
 
     }
 
-    static int getSavedGameLore(int savedGameId) {
+    static void setSavedGameLastStands(int savedGameId, int lastStands) {
+        //get the saved game
+        JSONObject lastStandObj = getSavedGameLastStandsObj(savedGameId);
+        if (lastStandObj == null)
+            return;
+
+        try {
+            lastStandObj.put(FFS_LAST_STAND,lastStands);
+        } catch (JSONException e) {
+            Log.d(TAG, "setSavedGameLastStands: JSON error. Could not get '" + FFS_LAST_STAND + "' from saved game");
+        }
+    }
+
+    private static JSONObject getSavedGameLastStandsObj(int savedGameId) {
         //get the saved game
         JSONObject savedGame = getSavedGame(savedGameId);
         if (savedGame == null)
-            return 0;
+            return null;
+
+        return savedGame;
+    }
+
+    static int getSavedGameLore(int savedGameId) {
+
+        try {
+            JSONObject jsonObj = getSavedGameLoreObj(savedGameId);
+            if (jsonObj != null) {
+                return jsonObj.getInt(FFG_VALUE);
+            }
+        } catch (JSONException e) {
+            Log.d(TAG, "getSavedGameLore: JSON error. Could not get '" + FFG_VALUE + "' from saved game");
+        }
+        return 0;
+    }
+
+    static void setSavedGameLore(int savedGameId, int lore) {
+        //get the saved game
+        try {
+            JSONObject jsonObj = getSavedGameLoreObj(savedGameId);
+            if (jsonObj != null) {
+                jsonObj.put(FFG_VALUE,lore);
+        }
+        } catch (JSONException e) {
+            Log.d(TAG, "setSavedGameLore: JSON error. Could not get '" + FFG_VALUE + "' from saved game");
+        }
+    }
+
+    private static JSONObject getSavedGameLoreObj(int savedGameId) {
+        //get the saved game
+        JSONObject savedGame = getSavedGame(savedGameId);
+        if (savedGame == null)
+            return null;
 
         try {
 
@@ -131,7 +208,7 @@ class Utils {
             for (int i = 0; i < jsonArr.length(); i++) {
                 JSONObject jsonObj = jsonArr.getJSONObject(i);
                 if (jsonObj.getString(FFG_NAME).compareTo(FFG_CAMP_LORE) == 0) {
-                    return jsonObj.getInt(FFG_VALUE);
+                    return jsonObj;
                 }
 
             }
@@ -139,8 +216,7 @@ class Utils {
         } catch (JSONException e) {
             Log.d(TAG, "getSavedGameHeroType: JSON error. Could not get '" + FFG_GLOBAL_VARS + "' from saved game");
         }
-        return 0;
-
+        return null;
     }
 
     static int getSavedGameHeroType(int savedGameId, int heroIdx) {
@@ -206,13 +282,10 @@ class Utils {
 
 
     static String getSavedGamePartyName(int savedGameId) {
-        //get the saved game
-        JSONObject savedGame = getSavedGame(savedGameId);
-        if (savedGame == null)
-            return "";
 
+        JSONObject jsonSavedGame = getSavedGamePartyNameObj(savedGameId);
         try {
-            return savedGame.getString(FFG_PARTY_NAME);
+            return jsonSavedGame.getString(FFG_PARTY_NAME);
         } catch (JSONException e) {
             Log.d(TAG, "getSavedGamePartyName: JSON error. Could not get '" + FFG_PARTY_NAME + "' from saved game");
         }
@@ -220,15 +293,33 @@ class Utils {
         return "";
     }
 
-    static int getSavedGameDifficulty(int savedGameId) {
+    static void setSavedGamePartyName(int savedGameId,String partyName) {
+
+        JSONObject jsonSavedGame = getSavedGamePartyNameObj(savedGameId);
+        try {
+            jsonSavedGame.put(FFG_PARTY_NAME,partyName);
+        } catch (JSONException e) {
+            Log.d(TAG, "getSavedGamePartyName: JSON error. Could not get '" + FFG_PARTY_NAME + "' from saved game");
+        }
+    }
+
+    private static JSONObject getSavedGamePartyNameObj(int savedGameId) {
         //get the saved game
         JSONObject savedGame = getSavedGame(savedGameId);
         if (savedGame == null)
-            return 0;
+            return null;
+
+        return savedGame;
+    }
+
+    static int getSavedGameDifficulty(int savedGameId) {
+        JSONObject jsonObj = getSavedGameDifficultyObj(savedGameId);
+        if (jsonObj == null)
+            return GAME_NORMAL;
 
         int gameDifficulty = GAME_NORMAL;
         try {
-            gameDifficulty = savedGame.getInt(FFG_DIFFICULTY);
+            return jsonObj.getInt(FFG_DIFFICULTY);
         } catch (JSONException e) {
             Log.d(TAG, "getSavedGameDifficulty: JSON error. Could not get '" + FFG_DIFFICULTY + "' from saved game");
         }
@@ -236,17 +327,34 @@ class Utils {
         return gameDifficulty;
     }
 
+    static void setSavedGameDifficulty(int savedGameId, int difficulty) {
+        JSONObject jsonObj = getSavedGameDifficultyObj(savedGameId);
+        if (jsonObj == null)
+            return;
+
+        try {
+            jsonObj.put(FFG_DIFFICULTY,difficulty);
+        } catch (JSONException e) {
+            Log.d(TAG, "setSavedGameDifficulty: JSON error. Could not get '" + FFG_DIFFICULTY + "' from saved game");
+        }
+    }
+
+    private static JSONObject getSavedGameDifficultyObj(int savedGameId) {
+        //get the saved game
+        return getSavedGame(savedGameId);
+    }
+
 
     static long getSavedGameDate(int savedGameId) {
 
         //get the saved game
-        JSONObject savedGame = getSavedGame(savedGameId);
-        if (savedGame == null)
+        JSONObject jsonObj = getSavedGame(savedGameId);
+        if (jsonObj == null)
             return 0;
 
         String epoch = "";
         try {
-            epoch = savedGame.getString(FFG_TIMESTAMP);
+            epoch = jsonObj.getString(FFG_TIMESTAMP);
         } catch (JSONException e) {
             Log.d(TAG, "getSavedGameDate: JSON error. Could not get '" + FFG_TIMESTAMP + "' from saved game");
         }
@@ -255,26 +363,6 @@ class Utils {
         BigInteger base = new BigInteger(JAN1ST1970);
         BigInteger divider = new BigInteger(TIME_DIV);
         return datebig.subtract(base).divide(divider).longValue();
-    }
-
-
-    static String getSavedGameTime(int savedGameId, Context context) {
-
-        //get the saved game
-        JSONObject savedGame = getSavedGame(savedGameId);
-        if (savedGame == null)
-            return null;
-
-        int epoch = 0;
-        try {
-            epoch = savedGame.getInt(FFG_TIMESTAMP);
-        } catch (JSONException e) {
-            Log.d(TAG, "getSavedGameDate: JSON error. Could not get '" + FFG_TIMESTAMP + "' from saved game");
-        }
-
-        Date date = new Date(epoch);
-        DateFormat dateFormat = android.text.format.DateFormat.getDateFormat(context);
-        return dateFormat.format(date);
     }
 
 

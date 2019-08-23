@@ -14,9 +14,12 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-public class SavedGame extends AppCompatActivity {
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+public class SavedGame extends AppCompatActivity implements View.OnClickListener {
 
     private final int INFLATED_PANELS_BASE_ID = 128754;
+    private int mSaveGameIdx = -1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -26,22 +29,25 @@ public class SavedGame extends AppCompatActivity {
         if (extras == null) {
             return;
         }
-        TextView tvSavedGameIdx = findViewById(R.id.saved_game_idx);
         Spinner spChapters = findViewById(R.id.current_chapter);
         Spinner spDifficulty = findViewById(R.id.game_difficulty);
 
-        int savedGameIdx = extras.getInt(Utils.INTENT_EXTRA_SAVE_GAME_ID_KEY);
-       // tvSavedGameIdx.setText("The current game idx is: " + savedGameIdx);
+        mSaveGameIdx = extras.getInt(Utils.INTENT_EXTRA_SAVE_GAME_ID_KEY);
+        if (mSaveGameIdx < 0)
+            return;
+
 
 
         EditText etPartyName = findViewById(R.id.party_name);
         EditText etLore = findViewById(R.id.party_lore);
         EditText etLastStands = findViewById(R.id.last_stands);
+        FloatingActionButton fabSaveButton = findViewById(R.id.save_game_button);
+        fabSaveButton.setOnClickListener(this);
 
 
-        etPartyName.setText(Utils.getSavedGamePartyName(savedGameIdx));
-        etLore.setText(String.valueOf(Utils.getSavedGameLore(savedGameIdx)));
-        etLastStands.setText(String.valueOf(Utils.getSavedGameLastStands(savedGameIdx)));
+        etPartyName.setText(Utils.getSavedGamePartyName(mSaveGameIdx));
+        etLore.setText(String.valueOf(Utils.getSavedGameLore(mSaveGameIdx)));
+        etLastStands.setText(String.valueOf(Utils.getSavedGameLastStands(mSaveGameIdx)));
 
 
         ArrayAdapter<CharSequence> chaptersAdapter = ArrayAdapter.createFromResource(this,
@@ -51,7 +57,7 @@ public class SavedGame extends AppCompatActivity {
         chaptersAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
         spChapters.setAdapter(chaptersAdapter);
 
-        int currentChapter = Utils.getSavedGameChapter(savedGameIdx);
+        int currentChapter = Utils.getSavedGameChapter(mSaveGameIdx);
         spChapters.setSelection(currentChapter-1);
 
 
@@ -62,11 +68,11 @@ public class SavedGame extends AppCompatActivity {
         difficultyAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
         spDifficulty.setAdapter(difficultyAdapter);
 
-        int savedGameDifficulty = Utils.getSavedGameDifficulty(savedGameIdx);
+        int savedGameDifficulty = Utils.getSavedGameDifficulty(mSaveGameIdx);
         spDifficulty.setSelection(savedGameDifficulty);
 
 
-        int numOfHeroes = Utils.getSavedGameNumOfHeroes(savedGameIdx);
+        int numOfHeroes = Utils.getSavedGameNumOfHeroes(mSaveGameIdx);
         ConstraintLayout mainView = findViewById(R.id.saved_game_layout);
         int lastId = R.id.difficulty_label;
         for (int i=  0; i < numOfHeroes; i++) {
@@ -86,16 +92,47 @@ public class SavedGame extends AppCompatActivity {
 
             lastId = inflatedLayout.getId();
 
-            int heroType = Utils.getSavedGameHeroType(savedGameIdx,i);
+            int heroType = Utils.getSavedGameHeroType(mSaveGameIdx,i);
             int resID = MainActivity.getHeroResIDFromHeroIdx(this,heroType);
             ImageView ivHeroImage = inflatedLayout.findViewById(R.id.hero_image);
             ivHeroImage.setImageResource(resID);
 
             EditText etXP = inflatedLayout.findViewById(R.id.hero_xp);
-            int xp = Utils.getSaveGameHeroXP(savedGameIdx,i);
+            int xp = Utils.getSaveGameHeroXP(mSaveGameIdx,i);
             etXP.setText(String.valueOf(xp));
 
         }
+    }
 
+    @Override
+    public void onClick(View v) {
+        //save the game data
+        EditText etLore = findViewById(R.id.party_lore);
+        int lore = Integer.parseInt(etLore.getText().toString());
+        Utils.setSavedGameLore(mSaveGameIdx,lore);
+
+
+        EditText etPartyName = findViewById(R.id.party_name);
+        String partyName = etPartyName.getText().toString();
+        Utils.setSavedGamePartyName(mSaveGameIdx,partyName);
+
+
+        EditText etLastStandFails = findViewById(R.id.last_stands);
+        int lastStandFails = Integer.parseInt(etLastStandFails.getText().toString());
+        Utils.setSavedGameLastStands(mSaveGameIdx,lastStandFails);
+
+        Spinner spDifficulty = findViewById(R.id.game_difficulty);
+        int difficultyID = spDifficulty.getSelectedItemPosition();
+        Utils.setSavedGameDifficulty(mSaveGameIdx,difficultyID);
+
+        int numOfHeroes = Utils.getSavedGameNumOfHeroes(mSaveGameIdx);
+        for (int i=  0; i < numOfHeroes; i++) {
+            View heroView = findViewById(INFLATED_PANELS_BASE_ID + i);
+            if (heroView != null) {
+                EditText etHeroXP = heroView.findViewById(R.id.hero_xp);
+                int xp = Integer.parseInt(etHeroXP.getText().toString());
+                Utils.setSaveGameHeroXP(mSaveGameIdx,i,xp);
+            }
+        }
     }
 }
