@@ -1,10 +1,18 @@
 package il.co.woo.lotrjourneyseditor;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +28,7 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
 
     private final int INFLATED_PANELS_BASE_ID = 128754;
     private int mSaveGameIdx = -1;
+    private boolean[] mHeroReady = new boolean[5];
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,6 +40,9 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
         }
         Spinner spChapters = findViewById(R.id.current_chapter);
         Spinner spDifficulty = findViewById(R.id.game_difficulty);
+        for (int i = 0; i < mHeroReady.length; i++) {
+            mHeroReady[i] = false;
+        }
 
         mSaveGameIdx = extras.getInt(Utils.INTENT_EXTRA_SAVE_GAME_ID_KEY);
         if (mSaveGameIdx < 0)
@@ -99,13 +111,62 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
 
             EditText etXP = inflatedLayout.findViewById(R.id.hero_xp);
             int xp = Utils.getSaveGameHeroXP(mSaveGameIdx,i);
-            etXP.setText(String.valueOf(xp));
+            if (xp != Utils.FFG_INVALID_XP) {
+                etXP.setText(String.valueOf(xp));
+                mHeroReady[i] = true;
+            } else {
+                etXP.setText(this.getString(R.string.hero_not_init));
+                etXP.setEnabled(false);
+                etXP.setTextColor(Color.RED);
+            }
 
         }
     }
 
+
+    private void requestForPermission() {
+
+        if (ContextCompat.checkSelfPermission(SavedGame.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            if (ActivityCompat.shouldShowRequestPermissionRationale(SavedGame.this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+
+                promptForPermissionsDialog("Error requesting permission", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        ActivityCompat.requestPermissions(SavedGame.this,
+                                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                100);
+                    }
+                });
+
+            } else {
+
+                ActivityCompat.requestPermissions(SavedGame.this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        100);
+            }
+        }
+    }
+
+    private void promptForPermissionsDialog(String message, DialogInterface.OnClickListener onClickListener) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(SavedGame.this);
+
+        builder.setMessage(message)
+                .setPositiveButton("OK", onClickListener)
+                .setNegativeButton("Cancel", null)
+                .create()
+                .show();
+
+    }
+
+
     @Override
     public void onClick(View v) {
+
+        requestForPermission();
         //save the game data
         EditText etLore = findViewById(R.id.party_lore);
         int lore = Integer.parseInt(etLore.getText().toString());
@@ -125,14 +186,21 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
         int difficultyID = spDifficulty.getSelectedItemPosition();
         Utils.setSavedGameDifficulty(mSaveGameIdx,difficultyID);
 
+        Spinner spChapter = findViewById(R.id.current_chapter);
+        int chapter = spChapter.getSelectedItemPosition();
+        chapter++;
+        Utils.setSavedGameChapter(mSaveGameIdx,chapter);
+
         int numOfHeroes = Utils.getSavedGameNumOfHeroes(mSaveGameIdx);
         for (int i=  0; i < numOfHeroes; i++) {
             View heroView = findViewById(INFLATED_PANELS_BASE_ID + i);
-            if (heroView != null) {
+            if ((heroView != null) && (mHeroReady[i])){
                 EditText etHeroXP = heroView.findViewById(R.id.hero_xp);
                 int xp = Integer.parseInt(etHeroXP.getText().toString());
                 Utils.setSaveGameHeroXP(mSaveGameIdx,i,xp);
             }
         }
+
+        Utils.saveSavedGameToFile(this, mSaveGameIdx);
     }
 }

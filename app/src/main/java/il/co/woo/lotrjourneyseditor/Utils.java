@@ -7,6 +7,7 @@ import android.os.Environment;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
+import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,9 +17,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 class Utils {
@@ -33,6 +32,7 @@ class Utils {
     private static final String LOG_FILE_B_NAME = "LogB.txt";
     private static final String SAVE_FILE_A_NAME = "SavedGameA";
     private static final String SAVE_FILE_B_NAME = "SavedGameB";
+    private static final String SAVE_FILE_BACKUP_EXT = ".bak";
 
     private static final String FFG_TIMESTAMP = "Timestamp";
     private static final String JAN1ST1970 = "621355968000000000";
@@ -45,6 +45,9 @@ class Utils {
     private static final String FFG_PARTY_NAME = "PartyName";
 
     private static final String FFG_CHAPTER = "CurrentAdventureId";
+    private static final String FFG_COMPLETED_CHAPTERS = "CompletedAdventureIds";
+    private static final String FFG_CURR_SCENE = "CurrentScene";
+    private static final int FFG_SCENE_START = 10;
 
     private static final String FFG_HEROINFO_ARRAY = "HeroInfo";
     private static final String FFG_HEROINFO_ID = "Id";
@@ -67,6 +70,7 @@ class Utils {
 
     private static final String FFG_AVAIL_XP = "AvailableXP";
     private static final String FFG_XP = "XP";
+    static final int FFG_INVALID_XP = -1;
 
 
     private static ArrayList<JSONObject> mSavedGames = null;
@@ -75,16 +79,16 @@ class Utils {
         //get the saved game
         JSONObject heroXpObj = getSaveGameHeroXPObj(savedGameId,heroIdx);
         if (heroXpObj == null)
-            return FFG_HERO_ID_INVALID;
+            return FFG_INVALID_XP;
 
         try {
                 return heroXpObj.getInt(FFG_XP);
 
         } catch (JSONException e) {
-            Log.d(TAG, "getSaveGameHeroXP: JSON error. Could not get '" + FFG_HEROINFO_ARRAY + "' from saved game");
+            Log.d(TAG, "getSaveGameHeroXP: JSON error. Could not get '" + FFG_XP + "' from saved game");
         }
 
-        return 0;
+        return FFG_INVALID_XP;
     }
 
     static void setSaveGameHeroXP(int savedGameId,int heroIdx,int xp) {
@@ -97,7 +101,7 @@ class Utils {
             heroXpObj.put(FFG_XP,xp);
 
         } catch (JSONException e) {
-            Log.d(TAG, "setSaveGameHeroXP: JSON error. Could not get '" + FFG_HEROINFO_ARRAY + "' from saved game");
+            Log.d(TAG, "setSaveGameHeroXP: JSON error. Could not set '" + FFG_XP + "' from saved game");
         }
     }
 
@@ -280,6 +284,28 @@ class Utils {
         return chapter;
     }
 
+    static void setSavedGameChapter(int savedGameId, int newChapter) {
+        //get the saved game
+        JSONObject savedGame = getSavedGame(savedGameId);
+        if (savedGame == null)
+            return;
+
+        try {
+            savedGame.put(FFG_CHAPTER,newChapter);
+            savedGame.put(FFG_CURR_SCENE,FFG_SCENE_START);
+            int[] compleatedChapters = new int[newChapter-1];
+            for (int i = 0; i < compleatedChapters.length; i++) {
+                compleatedChapters[i] = i+1;
+            }
+            savedGame.put(FFG_COMPLETED_CHAPTERS, new JSONArray(compleatedChapters));
+
+        } catch (JSONException e) {
+            Log.d(TAG, "setSavedGameChapter: JSON error. Could not put '" + FFG_CHAPTER + "' from saved game");
+        }
+
+
+    }
+
 
     static String getSavedGamePartyName(int savedGameId) {
 
@@ -415,9 +441,9 @@ class Utils {
         if (files == null)
             return false;
         for (File file : files) {
-            if (file.getName().compareTo("LogA.txt") == 0)
+            if (file.getName().compareTo(LOG_FILE_A_NAME) == 0)
                 logALocated = true;
-            else if (file.getName().compareTo("SavedGameA") == 0)
+            else if (file.getName().compareTo(SAVE_FILE_A_NAME) == 0)
                 savedGameALocated = true;
         }
 
@@ -492,8 +518,65 @@ class Utils {
         return Math.round(px / ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT));
     }
 
+    private static boolean backupSavedGameFiles(Context context, int savedGameNum) {
+        String[] savedGamesPaths = getValidSavedGamePaths();
+        if (savedGamesPaths.length < savedGameNum)
+            return false;
 
+        String pathToSavedGame = savedGamesPaths[savedGameNum];
+        String[] fileNames = {SAVE_FILE_A_NAME,SAVE_FILE_B_NAME,LOG_FILE_A_NAME,LOG_FILE_B_NAME};
+        try {
+            for (String fileName:fileNames) {
+                File file = new File(pathToSavedGame + "/" + fileName + SAVE_FILE_BACKUP_EXT);
+                if (file.exists()) {
+                    if (file.delete() == false) {
+                        Log.d(TAG, "backupSavedGameFiles: failed to delete backup file.");
+                        return false;
+                    }
+                }
 
+                File srcFile = new File(pathToSavedGame + "/" + fileName);
+                if (srcFile.exists()) {
+                    file.createNewFile();
+                    FileUtils.copyFile(srcFile,file);
+                }
+            }
+            return true;
+        } catch (IOException e) {
+            Log.d(TAG, "backupSavedGameFiles: failed to backup saved game: " + savedGameNum + ". With error: " + e.getMessage());
+        }
+        return false;
+    }
 
+    static boolean saveSavedGameToFile(Context context, int savedGameNum) {
+        JSONObject savedGame = getSavedGame(savedGameNum);
+        if (savedGame == null) {
+            return false;
+        }
 
+        if (!backupSavedGameFiles(context, savedGameNum))
+            return false;
+
+        String[] savedGamesPaths = getValidSavedGamePaths();
+        if (savedGamesPaths.length < savedGameNum)
+            return false;
+
+        String[] fileNames = {SAVE_FILE_A_NAME,SAVE_FILE_B_NAME};
+        String pathToSavedGame = savedGamesPaths[savedGameNum];
+        for (String fileName:fileNames) {
+            File file = new File(pathToSavedGame + "/" + fileName);
+            if (file.exists())
+                file.delete();
+        }
+
+        File newSavedGame = new File(pathToSavedGame + "/" + SAVE_FILE_A_NAME);
+        try {
+            FileUtils.writeStringToFile(newSavedGame, savedGame.toString());
+            FileUtils.copyFile(newSavedGame,new File(pathToSavedGame + "/" + SAVE_FILE_B_NAME) );
+
+        } catch (IOException e) {
+            Log.d(TAG, "saveSavedGameToFile: failed to write to saved game: " + savedGameNum + ". With error: " + e.getMessage());
+        }
+        return true;
+    }
 }

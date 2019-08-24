@@ -12,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,8 +35,30 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int HEROES_IMAGE_ID_BASE = 716865;
 
+/*
+    BaseConfig mBaseConfig =  BaseConfig.newInstance(this)
+    public static String trimEnd( String s,  String suffix) {
 
+        if (s.endsWith(suffix)) {
 
+            return s.substring(0, s.length() - suffix.length());
+
+        }
+        return s;
+    }
+
+    String getInternalStoragePath() {
+        return trimEnd(Environment.getExternalStorageDirectory().getAbsolutePath(),"/");
+    }
+
+    boolean isPathOnSD(String path) {
+        sdCardPath.isNotEmpty() && path.startsWith(sdCardPath)
+    }
+
+    fun Context.isPathOnOTG(path: String) = otgPath.isNotEmpty() && path.startsWith(otgPath)
+
+    fun Context.needsStupidWritePermissions(path: String) = isPathOnSD(path) || isPathOnOTG(path)
+*/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
