@@ -8,6 +8,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -15,6 +16,9 @@ import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -38,6 +42,7 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
         if (extras == null) {
             return;
         }
+
         Spinner spChapters = findViewById(R.id.current_chapter);
         Spinner spDifficulty = findViewById(R.id.game_difficulty);
         for (int i = 0; i < mHeroReady.length; i++) {
@@ -166,6 +171,10 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
     @Override
     public void onClick(View v) {
 
+        saveToFile();
+    }
+
+    private void saveToFile() {
         requestForPermission();
         //save the game data
         EditText etLore = findViewById(R.id.party_lore);
@@ -203,4 +212,52 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
 
         Utils.saveSavedGameToFile(this, mSaveGameIdx);
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.saved_game_options_menu, menu);
+        return true;
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        //respond to menu item selection
+        switch (item.getItemId()) {
+
+            case R.id.export:
+                return true;
+
+            case R.id.restore:
+                Utils.restoreSavedGameFiles(this,mSaveGameIdx);
+                sendDataBackToPreviousActivity();
+                finish();
+                return true;
+            case R.id.save:
+                saveToFile();
+                return true;
+            default:
+
+                return super.onOptionsItemSelected(item);
+
+        }
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        sendDataBackToPreviousActivity();
+        super.onBackPressed();
+    }
+
+    /**
+     * Send data back to previous activity which start this one, you can call this method when users press on back key
+     * or when users press on a view (button, image, etc) on this activity.
+     */
+    private void sendDataBackToPreviousActivity() {
+        Intent intent = new Intent();
+        intent.putExtra(MainActivity.RELOAD_GAME_DATA,true);
+        setResult(Activity.RESULT_OK, intent);
+    }
+
 }

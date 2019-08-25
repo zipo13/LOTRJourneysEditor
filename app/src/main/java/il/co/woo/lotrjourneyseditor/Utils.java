@@ -404,11 +404,18 @@ class Utils {
     }
 
     private static void initSavedGameArray() {
+        if (mSavedGames != null)
+            mSavedGames.clear();
+
         mSavedGames = new ArrayList<>();
         String[] filePaths = getValidSavedGamePaths();
         for (String filePath : filePaths) {
             mSavedGames.add(readSavedGame(new File(filePath + "/" + SAVE_FILE_A_NAME)));
         }
+    }
+
+    static void clearSavedGameData() {
+        initSavedGameArray();
     }
 
     static boolean lotrAppInstalled(Context context) {
@@ -546,6 +553,30 @@ class Utils {
             Log.d(TAG, "backupSavedGameFiles: failed to backup saved game: " + savedGameNum + ". With error: " + e.getMessage());
         }
         return false;
+    }
+
+    static boolean restoreSavedGameFiles(Context context, int savedGameNum) {
+        String[] savedGamesPaths = getValidSavedGamePaths();
+        if (savedGamesPaths.length < savedGameNum)
+            return false;
+
+        String pathToSavedGame = savedGamesPaths[savedGameNum];
+        String[] fileNames = {SAVE_FILE_A_NAME,SAVE_FILE_B_NAME,LOG_FILE_A_NAME,LOG_FILE_B_NAME};
+        for (String fileName:fileNames) {
+            File buFile = new File(pathToSavedGame + "/" + fileName + SAVE_FILE_BACKUP_EXT);
+            File gameFile = new File(pathToSavedGame + "/" + fileName);
+            if (buFile.exists()) {
+
+                if ((gameFile.exists()) && !gameFile.delete()) {
+                    Log.d(TAG, "restoreSavedGameFiles: failed to delete game file.");
+                }
+
+                buFile.renameTo(gameFile);
+                buFile.delete();
+            }
+
+        }
+        return true;
     }
 
     static boolean saveSavedGameToFile(Context context, int savedGameNum) {

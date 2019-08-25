@@ -1,11 +1,13 @@
 package il.co.woo.lotrjourneyseditor;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -34,6 +36,9 @@ public class MainActivity extends AppCompatActivity {
     private static final String DRAWABLE_TYPE = "drawable";
 
     private static final int HEROES_IMAGE_ID_BASE = 716865;
+
+    private static final int SAVE_GAME_EDIT_ACTIVITY = 456;
+    public static final String RELOAD_GAME_DATA = "reload_game_data";
 
 /*
     BaseConfig mBaseConfig =  BaseConfig.newInstance(this)
@@ -92,6 +97,11 @@ public class MainActivity extends AppCompatActivity {
             tvAppInstalled.setText(getString(R.string.app_not_located_on_device));
             return;
         }
+
+        loadSavedGamesDetails();
+    }
+
+    void loadSavedGamesDetails() {
 
         int iNumberOfSavedGames = Utils.getNumberOfSavedGames();
         DateFormat timeFormat = android.text.format.DateFormat.getTimeFormat(getApplicationContext());
@@ -159,11 +169,45 @@ public class MainActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     Intent savedGameIntent = new Intent(MainActivity.this,SavedGame.class);
                     savedGameIntent.putExtra(Utils.INTENT_EXTRA_SAVE_GAME_ID_KEY,currentSavedGameIdx);
-                    startActivity(savedGameIntent);
+                    startActivityForResult(savedGameIntent,SAVE_GAME_EDIT_ACTIVITY);
                 }
             });
 
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == SAVE_GAME_EDIT_ACTIVITY) {
+            if (resultCode == Activity.RESULT_OK) {
+                if (data != null) {
+
+                    if (data.getBooleanExtra(RELOAD_GAME_DATA,false)) {
+                        reloadSavedGames();
+                    }
+                }
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    void clearSavedGamePanels() {
+        ConstraintLayout mainView = findViewById(R.id.main_container);
+        int iNumberOfSavedGames = Utils.getNumberOfSavedGames();
+        for (int i = 0; i < iNumberOfSavedGames; i++) {
+            View view = mainView.findViewById(INFLATED_PANELS_BASE_ID + i);
+            if (view != null) {
+                mainView.removeView(view);
+            }
+        }
+
+    }
+
+    void reloadSavedGames() {
+        Utils.clearSavedGameData();
+        clearSavedGamePanels();
+        loadSavedGamesDetails();;
     }
 
     public static int getHeroResIDFromHeroIdx(Context context, int heroIdx) {
