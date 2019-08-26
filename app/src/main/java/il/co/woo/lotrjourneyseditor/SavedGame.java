@@ -32,7 +32,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 public class SavedGame extends AppCompatActivity implements View.OnClickListener {
 
     private final int INFLATED_PANELS_BASE_ID = 128754;
-    private final int PICKFOLDER_REQUEST_CODE = 6948;
     private int mSaveGameIdx = -1;
     private boolean[] mHeroReady = new boolean[5];
     @Override
@@ -130,46 +129,6 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
         }
     }
 
-
-    private void requestForPermission() {
-
-        if (ContextCompat.checkSelfPermission(SavedGame.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            if (ActivityCompat.shouldShowRequestPermissionRationale(SavedGame.this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-
-                promptForPermissionsDialog("Error requesting permission", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        ActivityCompat.requestPermissions(SavedGame.this,
-                                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                                100);
-                    }
-                });
-
-            } else {
-
-                ActivityCompat.requestPermissions(SavedGame.this,
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        100);
-            }
-        }
-    }
-
-    private void promptForPermissionsDialog(String message, DialogInterface.OnClickListener onClickListener) {
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(SavedGame.this);
-
-        builder.setMessage(message)
-                .setPositiveButton("OK", onClickListener)
-                .setNegativeButton("Cancel", null)
-                .create()
-                .show();
-
-    }
-
-
     @Override
     public void onClick(View v) {
 
@@ -177,7 +136,6 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
     }
 
     private void saveToFile(boolean export) {
-        requestForPermission();
         //save the game data
         EditText etLore = findViewById(R.id.party_lore);
         int lore = Integer.parseInt(etLore.getText().toString());
@@ -212,7 +170,16 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
             }
         }
 
-        Utils.saveSavedGameToFile(this, mSaveGameIdx,export);
+        if (!Utils.saveSavedGameToFile(this, mSaveGameIdx,export)) {
+            new AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.save_failed_msg_title))
+                    .setMessage(getString(R.string.save_failed_msg))
+                    // The dialog is automatically dismissed when a dialog button is clicked.
+                    .setPositiveButton(android.R.string.ok, null)
+                    // A null listener allows the button to dismiss the dialog and take no further action.
+                    .setIcon(android.R.drawable.ic_dialog_info)
+                    .show();
+        }
     }
 
     @Override
@@ -232,11 +199,8 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
                 new AlertDialog.Builder(this)
                         .setTitle(getString(R.string.export_dialog_title))
                         .setMessage(getString(R.string.export_message))
-
-                        // Specifying a listener allows you to take an action before dismissing the dialog.
                         // The dialog is automatically dismissed when a dialog button is clicked.
                         .setPositiveButton(android.R.string.ok, null)
-
                         // A null listener allows the button to dismiss the dialog and take no further action.
                         .setIcon(android.R.drawable.ic_dialog_info)
                         .show();

@@ -1,11 +1,16 @@
 package il.co.woo.lotrjourneyseditor;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.util.DisplayMetrics;
 import android.util.Log;
+
+import androidx.appcompat.app.AlertDialog;
 
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
@@ -23,6 +28,8 @@ import java.util.List;
 class Utils {
 
     public static final String INTENT_EXTRA_SAVE_GAME_ID_KEY = "SAVED_GAME_ID";
+    public static final int PERMISSIONS_REQUEST_READ_WRITE_EXTERNAL_STORAGE = 5487;
+    private static int MAX_SVAED_GAMES = 5;
 
     private static final String TAG = "Utils";
     private static final String LOTR_PKG_NAME = "com.fantasyflightgames.jime";
@@ -432,19 +439,29 @@ class Utils {
         return false;
     }
 
+    //get the save game path
     private static String getSavedGamePath() {
+        Log.d(TAG, "getSavedGamePath: Enter");
+
+        //simply construct it from the environment and the location of the package
         String internalFilesPath = Environment.getExternalStorageDirectory().getPath();
         return internalFilesPath + "/" + LOTR_SAVED_GAMES_PATH;
     }
 
 
-    private static boolean savedFilesExist(File dir) {
-        if ((dir == null) || (!dir.exists()))
+    //check if a saved game exists in the given location
+    private static boolean savedFilesExist(File folder) {
+        Log.d(TAG, "savedFilesExist: Enter");
+
+        //check that the folder exsts
+        if ((folder == null) || (!folder.exists()))
             return false;
 
+        //perform 2 tests.
+        //The first is for the save game file and the second is for the log file
         boolean logALocated = false;
         boolean savedGameALocated = false;
-        File[] files = dir.listFiles();
+        File[] files = folder.listFiles();
         if (files == null)
             return false;
         for (File file : files) {
@@ -454,50 +471,53 @@ class Utils {
                 savedGameALocated = true;
         }
 
+        //if both OK the we found a save game location
         return logALocated && savedGameALocated;
     }
 
+    //scan to see how many saved game valid paths are on the device
     private static String[] getValidSavedGamePaths() {
+        Log.d(TAG, "getValidSavedGamePaths: Enter");
         List<String> savedGamesPaths = new ArrayList<>();
-        for (int i = 0; i < 6; i++) {
-            String savedGamespath = getSavedGamePath() + "/" + i;
-            if (savedFilesExist(new File(savedGamespath)))
-                savedGamesPaths.add(savedGamespath);
+        //chec
+        for (int i = 0; i < MAX_SVAED_GAMES; i++) {
+            String savedGamesPath = getSavedGamePath() + "/" + i;
+            if (savedFilesExist(new File(savedGamesPath)))
+                savedGamesPaths.add(savedGamesPath);
         }
+        //return array fo Strings
         return savedGamesPaths.toArray(new String[0]);
     }
 
+    //simply get the number of saved game located on the device
     static int getNumberOfSavedGames() {
         return getValidSavedGamePaths().length;
     }
 
+    //helper function to read the save game data from a file
     private static JSONObject readSavedGame(File file) {
+        Log.d(TAG, "readSavedGame: Enter");
 
+        //check that the file is present and ready
         if ((file == null) || (!file.exists()) || (!file.canRead()))
             return null;
 
-
-        StringBuilder json = new StringBuilder();
+        String fileContent;
         try {
 
-            BufferedReader br = new BufferedReader(new FileReader(file));
-            String line;
-            while ((line = br.readLine()) != null) {
-                json.append(line);
-            }
-            br.close();
+            String charset = null;//to avoid ambiguity
+            fileContent = FileUtils.readFileToString(file,charset);
         }
         catch (IOException e) {
-            e.printStackTrace();
+            Log.d(TAG, "readSavedGame: failed to read file contents with error: " + e.getMessage());
             return null;
         }
 
         JSONObject jsonObj = null;
         try {
-            jsonObj = new JSONObject(json.toString());
-        } catch (org.json.JSONException e)
-        {
-            e.printStackTrace();
+            jsonObj = new JSONObject(fileContent);
+        } catch (org.json.JSONException e) {
+            Log.d(TAG, "readSavedGame: failed to convert file content to JSON with error: " + e.getMessage());
         }
         return jsonObj;
 
@@ -525,27 +545,32 @@ class Utils {
         return Math.round(px / ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT));
     }
 
+    //Backup all the files in a savegame folder
+    //this is done simply by copying the files located there to a .bak files
     private static boolean backupSavedGameFiles(Context context, int savedGameNum) {
+        Log.d(TAG, "backupSavedGameFiles: Enter");
         String[] savedGamesPaths = getValidSavedGamePaths();
-        if (savedGamesPaths.length < savedGameNum)
+        if (savedGamesPaths.length < savedGameNum) {
+            Log.d(TAG, "backupSavedGameFiles: Saved game number too big than the current saved games - exiting");
             return false;
+        }
 
         String pathToSavedGame = savedGamesPaths[savedGameNum];
         String[] fileNames = {SAVE_FILE_A_NAME,SAVE_FILE_B_NAME,LOG_FILE_A_NAME,LOG_FILE_B_NAME};
         try {
             for (String fileName:fileNames) {
-                File file = new File(pathToSavedGame + "/" + fileName + SAVE_FILE_BACKUP_EXT);
-                if (file.exists()) {
-                    if (file.delete() == false) {
+                //check if a backup already exists and if so delete it
+                File backupFile = new File(pathToSavedGame + "/" + fileName + SAVE_FILE_BACKUP_EXT);
+                if (backupFile.exists()) {
+                    if (!backupFile.delete()) {
                         Log.d(TAG, "backupSavedGameFiles: failed to delete backup file.");
                         return false;
                     }
                 }
-
+                //now backup the save game file
                 File srcFile = new File(pathToSavedGame + "/" + fileName);
-                if (srcFile.exists()) {
-                    file.createNewFile();
-                    FileUtils.copyFile(srcFile,file);
+                if ((srcFile.exists()) && (backupFile.createNewFile())) {
+                    FileUtils.copyFile(srcFile,backupFile);
                 }
             }
             return true;
@@ -555,11 +580,16 @@ class Utils {
         return false;
     }
 
+    //restore backup files to the save game files
     static boolean restoreSavedGameFiles(Context context, int savedGameNum) {
+        Log.d(TAG, "restoreSavedGameFiles: Enter");
         String[] savedGamesPaths = getValidSavedGamePaths();
-        if (savedGamesPaths.length < savedGameNum)
+        if (savedGamesPaths.length < savedGameNum) {
+            Log.d(TAG, "restoreSavedGameFiles: Saved game number too big than the current saved games - exiting");
             return false;
+        }
 
+        //go over the files and check if there is a .bak file
         String pathToSavedGame = savedGamesPaths[savedGameNum];
         String[] fileNames = {SAVE_FILE_A_NAME,SAVE_FILE_B_NAME,LOG_FILE_A_NAME,LOG_FILE_B_NAME};
         for (String fileName:fileNames) {
@@ -567,53 +597,107 @@ class Utils {
             File gameFile = new File(pathToSavedGame + "/" + fileName);
             if (buFile.exists()) {
 
-                if ((gameFile.exists()) && !gameFile.delete()) {
+                //try to restore the game file
+                if ((gameFile.exists()) && (!gameFile.delete())) {
                     Log.d(TAG, "restoreSavedGameFiles: failed to delete game file.");
+                } else {
+                    buFile.renameTo(gameFile);
+                    buFile.delete();//delete the backup file after restoring it
                 }
-
-                buFile.renameTo(gameFile);
-                buFile.delete();
             }
 
         }
         return true;
     }
 
+    //Save the JSON save game sturcture that is currently in memory to a file
     static boolean saveSavedGameToFile(Context context, int savedGameNum,boolean export) {
+        Log.d(TAG, "saveSavedGameToFile: Enter");
+        //check to see if the save game exists
         JSONObject savedGame = getSavedGame(savedGameNum);
         if (savedGame == null) {
             return false;
         }
 
-        if (!backupSavedGameFiles(context, savedGameNum))
+        //try to make a back up - if you fail do not change the actual files
+        if (!backupSavedGameFiles(context, savedGameNum)) {
             return false;
+        }
 
+        //check if the save game number is valid
         String[] savedGamesPaths = getValidSavedGamePaths();
-        if (savedGamesPaths.length < savedGameNum)
+        if (savedGamesPaths.length < savedGameNum) {
             return false;
+        }
 
+        //delete the current save game files
         String[] fileNames = {SAVE_FILE_A_NAME,SAVE_FILE_B_NAME};
         String pathToSavedGame = savedGamesPaths[savedGameNum];
         for (String fileName:fileNames) {
             File file = new File(pathToSavedGame + "/" + fileName);
-            if (file.exists())
-                file.delete();
+            if ((file.exists()) && (!file.delete())) {
+                return false;
+            }
         }
 
+        //create a new file
         File newSavedGame = new File(pathToSavedGame + "/" + SAVE_FILE_A_NAME);
         try {
-            FileUtils.writeStringToFile(newSavedGame, savedGame.toString());
+            String encoding  = null;//to avoid ambiguity
+            FileUtils.writeStringToFile(newSavedGame, savedGame.toString(),encoding);
+            //duplicate firl A to fie B - not sure why but all the ave game have it so....
             FileUtils.copyFile(newSavedGame,new File(pathToSavedGame + "/" + SAVE_FILE_B_NAME) );
+            //check if this is also an export operation
             if (export) {
+                //locate the downloads folder and copy the file there
                 File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
                 File exportFile = new File(downloadsDir.getAbsolutePath() + "/" + SAVE_FILE_A_NAME);
                 FileUtils.copyFile(newSavedGame,exportFile);
             }
-
         } catch (IOException e) {
             Log.d(TAG, "saveSavedGameToFile: failed to write to saved game: " + savedGameNum + ". With error: " + e.getMessage());
         }
         return true;
+    }
+
+
+    //check if the Read/Write permission has been already given to us
+    static boolean arePermissionsNeeded(Activity requester) {
+        Log.d(TAG, "arePermissionsNeeded: Enter");
+        if (requester.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            return true;
+        }
+        return false;
+    }
+
+    static void checkReadWritePermissions(final Activity requester) {
+        Log.d(TAG, "checkReadWritePermissions: Enter");
+        if (requester.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (requester.shouldShowRequestPermissionRationale(
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                //show a message explaining to the user why the Read/Write permission is needed
+                new AlertDialog.Builder(requester)
+                        .setTitle(requester.getString(R.string.permission_request))
+                        .setMessage(requester.getString(R.string.permission_request_msg))
+                        // The dialog is automatically dismissed when a dialog button is clicked.
+                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                requester.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                        PERMISSIONS_REQUEST_READ_WRITE_EXTERNAL_STORAGE);
+                            }
+                        })
+                        // A null listener allows the button to dismiss the dialog and take no further action.
+                        .setIcon(android.R.drawable.ic_dialog_info)
+                        .show();
+            }
+
+
+        }
     }
 
 

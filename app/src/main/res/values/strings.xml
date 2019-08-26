@@ -19,6 +19,11 @@
     <string name="restore_from_backup">Restore from backup</string>
     <string name="export_message">Save game file was saved and exported to the \'Downloads\' folder on your device.\nLook for a file named \'SaveGameA\' and copy it to the device you want to move the saved game to.</string>
     <string name="export_dialog_title">Export save game file</string>
+    <string name="permission_request">Permission Request</string>
+    <string name="permission_request_msg">In order to read and write the save game data, the app will now request from you a permission to access the device storage.</string>
+    <string name="permission_denied_msg">Since no read/write permission were given the app will now close.</string>
+    <string name="save_failed_msg_title">Saving failed</string>
+    <string name="save_failed_msg">Saving the changes to the save game file failed.</string>
     <string-array name="chapter_names">
         <item>Chapter 1</item>
         <item>Chapter 2</item>

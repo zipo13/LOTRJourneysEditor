@@ -1,6 +1,7 @@
 package il.co.woo.lotrjourneyseditor;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
@@ -9,6 +10,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -30,7 +32,6 @@ import java.util.TimeZone;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-    public static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 55151848;
     static final int INFLATED_PANELS_BASE_ID = 5478126;
     private static String HERO_IMG_NAME_PREFIX = "hero_";
     private static final String DRAWABLE_TYPE = "drawable";
@@ -40,68 +41,65 @@ public class MainActivity extends AppCompatActivity {
     private static final int SAVE_GAME_EDIT_REQ_CODE = 456;
     public static final String RELOAD_GAME_DATA = "reload_game_data";
 
-/*
-    BaseConfig mBaseConfig =  BaseConfig.newInstance(this)
-    public static String trimEnd( String s,  String suffix) {
 
-        if (s.endsWith(suffix)) {
-
-            return s.substring(0, s.length() - suffix.length());
-
-        }
-        return s;
-    }
-
-    String getInternalStoragePath() {
-        return trimEnd(Environment.getExternalStorageDirectory().getAbsolutePath(),"/");
-    }
-
-    boolean isPathOnSD(String path) {
-        sdCardPath.isNotEmpty() && path.startsWith(sdCardPath)
-    }
-
-    fun Context.isPathOnOTG(path: String) = otgPath.isNotEmpty() && path.startsWith(otgPath)
-
-    fun Context.needsStupidWritePermissions(path: String) = isPathOnSD(path) || isPathOnOTG(path)
-*/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            // Should we show an explanation?
-            if (shouldShowRequestPermissionRationale(
-                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                // Explain to the user why we need to read the contacts
-            }
-
-            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                    MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
-
-            // MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE is an
-            // app-defined int constant that should be quite unique
-
-            return;
+        if (Utils.arePermissionsNeeded(this)) {
+            Utils.checkReadWritePermissions(this);
+        } else {
+            loadSavedGamesDetails();
         }
+    }
+
+    //Check for external storage write permissions.
+    //If non are given do not bother with adat loading as it will fail
+    //just close the app withan error message
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case Utils.PERMISSIONS_REQUEST_READ_WRITE_EXTERNAL_STORAGE: {
+                // If request is cancelled, the result arrays are empty.
+                if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    loadSavedGamesDetails();
+                } else {
+                    // permission denied
+                    new AlertDialog.Builder(this)
+                            .setTitle(getString(R.string.permission_request))
+                            .setMessage(getString(R.string.permission_denied_msg))
+                            // The dialog is automatically dismissed when a dialog button is clicked.
+                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    finish();
+                                }
+                            })
+                            // A null listener allows the button to dismiss the dialog and take no further action.
+                            .setIcon(android.R.drawable.ic_dialog_info)
+                            .show();
+                }
+            }
+        }
+    }
 
 
+    //Load all the saved game details from the device.
+    void loadSavedGamesDetails() {
+
+        //populate some textviews with information about locating the LOTR JIME app
         TextView tvAppInstalled = findViewById(R.id.app_installed_status);
         if (Utils.lotrAppInstalled(this)) {
             tvAppInstalled.setText(getString(R.string.app_located_on_device));
 
         } else {
+            //the app was not located so there is nothing to load.
             tvAppInstalled.setText(getString(R.string.app_not_located_on_device));
             return;
         }
 
-        loadSavedGamesDetails();
-    }
-
-    void loadSavedGamesDetails() {
 
         int iNumberOfSavedGames = Utils.getNumberOfSavedGames();
         DateFormat timeFormat = android.text.format.DateFormat.getTimeFormat(getApplicationContext());
