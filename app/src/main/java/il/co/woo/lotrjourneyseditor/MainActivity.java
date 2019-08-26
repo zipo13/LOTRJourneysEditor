@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int HEROES_IMAGE_ID_BASE = 716865;
 
-    private static final int SAVE_GAME_EDIT_ACTIVITY = 456;
+    private static final int SAVE_GAME_EDIT_REQ_CODE = 456;
     public static final String RELOAD_GAME_DATA = "reload_game_data";
 
 /*
@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     Intent savedGameIntent = new Intent(MainActivity.this,SavedGame.class);
                     savedGameIntent.putExtra(Utils.INTENT_EXTRA_SAVE_GAME_ID_KEY,currentSavedGameIdx);
-                    startActivityForResult(savedGameIntent,SAVE_GAME_EDIT_ACTIVITY);
+                    startActivityForResult(savedGameIntent,SAVE_GAME_EDIT_REQ_CODE);
                 }
             });
 
@@ -178,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if (requestCode == SAVE_GAME_EDIT_ACTIVITY) {
+        if (requestCode == SAVE_GAME_EDIT_REQ_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 if (data != null) {
 

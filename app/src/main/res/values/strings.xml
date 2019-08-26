@@ -17,6 +17,8 @@
     <string name="hero_not_init">N/A</string>
     <string name="export">Export...</string>
     <string name="restore_from_backup">Restore from backup</string>
+    <string name="export_message">Save game file was saved and exported to the \'Downloads\' folder on your device.\nLook for a file named \'SaveGameA\' and copy it to the device you want to move the saved game to.</string>
+    <string name="export_dialog_title">Export save game file</string>
     <string-array name="chapter_names">
         <item>Chapter 1</item>
         <item>Chapter 2</item>

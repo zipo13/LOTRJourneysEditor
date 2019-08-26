@@ -1,5 +1,6 @@
 package il.co.woo.lotrjourneyseditor;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -31,6 +32,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 public class SavedGame extends AppCompatActivity implements View.OnClickListener {
 
     private final int INFLATED_PANELS_BASE_ID = 128754;
+    private final int PICKFOLDER_REQUEST_CODE = 6948;
     private int mSaveGameIdx = -1;
     private boolean[] mHeroReady = new boolean[5];
     @Override
@@ -171,10 +173,10 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
     @Override
     public void onClick(View v) {
 
-        saveToFile();
+        saveToFile(false);
     }
 
-    private void saveToFile() {
+    private void saveToFile(boolean export) {
         requestForPermission();
         //save the game data
         EditText etLore = findViewById(R.id.party_lore);
@@ -210,7 +212,7 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
             }
         }
 
-        Utils.saveSavedGameToFile(this, mSaveGameIdx);
+        Utils.saveSavedGameToFile(this, mSaveGameIdx,export);
     }
 
     @Override
@@ -226,6 +228,18 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
         switch (item.getItemId()) {
 
             case R.id.export:
+                saveToFile(true);
+                new AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.export_dialog_title))
+                        .setMessage(getString(R.string.export_message))
+
+                        // Specifying a listener allows you to take an action before dismissing the dialog.
+                        // The dialog is automatically dismissed when a dialog button is clicked.
+                        .setPositiveButton(android.R.string.ok, null)
+
+                        // A null listener allows the button to dismiss the dialog and take no further action.
+                        .setIcon(android.R.drawable.ic_dialog_info)
+                        .show();
                 return true;
 
             case R.id.restore:
@@ -234,7 +248,7 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
                 finish();
                 return true;
             case R.id.save:
-                saveToFile();
+                saveToFile(false);
                 return true;
             default:
 

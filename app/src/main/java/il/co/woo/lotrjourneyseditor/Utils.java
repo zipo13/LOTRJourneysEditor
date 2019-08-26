@@ -579,7 +579,7 @@ class Utils {
         return true;
     }
 
-    static boolean saveSavedGameToFile(Context context, int savedGameNum) {
+    static boolean saveSavedGameToFile(Context context, int savedGameNum,boolean export) {
         JSONObject savedGame = getSavedGame(savedGameNum);
         if (savedGame == null) {
             return false;
@@ -604,10 +604,17 @@ class Utils {
         try {
             FileUtils.writeStringToFile(newSavedGame, savedGame.toString());
             FileUtils.copyFile(newSavedGame,new File(pathToSavedGame + "/" + SAVE_FILE_B_NAME) );
+            if (export) {
+                File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                File exportFile = new File(downloadsDir.getAbsolutePath() + "/" + SAVE_FILE_A_NAME);
+                FileUtils.copyFile(newSavedGame,exportFile);
+            }
 
         } catch (IOException e) {
             Log.d(TAG, "saveSavedGameToFile: failed to write to saved game: " + savedGameNum + ". With error: " + e.getMessage());
         }
         return true;
     }
+
+
 }
