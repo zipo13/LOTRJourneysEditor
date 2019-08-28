@@ -760,6 +760,10 @@ class Utils {
                         // A null listener allows the button to dismiss the dialog and take no further action.
                         .setIcon(android.R.drawable.ic_dialog_info)
                         .show();
+            } else {
+                //if no rational is needed then just request the permission.
+                requester.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        PERMISSIONS_REQUEST_READ_WRITE_EXTERNAL_STORAGE);
             }
 
 
