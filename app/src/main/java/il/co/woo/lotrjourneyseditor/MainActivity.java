@@ -6,7 +6,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -16,7 +15,6 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -47,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //check if we need permissions to read/write on this device
+        //if we cannot obtain them close the app as there is nothing to be done without them
         if (Utils.arePermissionsNeeded(this)) {
             Utils.checkReadWritePermissions(this);
         } else {
@@ -56,17 +56,19 @@ public class MainActivity extends AppCompatActivity {
 
     //Check for external storage write permissions.
     //If non are given do not bother with adat loading as it will fail
-    //just close the app withan error message
+    //just close the app with an error message
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String[] permissions, int[] grantResults) {
+        Log.d(TAG, "onRequestPermissionsResult: Enter");
         switch (requestCode) {
             case Utils.PERMISSIONS_REQUEST_READ_WRITE_EXTERNAL_STORAGE: {
                 // If request is cancelled, the result arrays are empty.
                 if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     loadSavedGamesDetails();
                 } else {
-                    // permission denied
+                    // permission denied as the user did not give us permission to read the saved games
+                    //give an alert explaining why the app will close now.
                     new AlertDialog.Builder(this)
                             .setTitle(getString(R.string.permission_request))
                             .setMessage(getString(R.string.permission_denied_msg))
@@ -88,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
 
     //Load all the saved game details from the device.
     void loadSavedGamesDetails() {
+        Log.d(TAG, "loadSavedGamesDetails: Enter");
 
         //populate some textviews with information about locating the LOTR JIME app
         TextView tvAppInstalled = findViewById(R.id.app_installed_status);
@@ -101,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
+        //calculate the time
         int iNumberOfSavedGames = Utils.getNumberOfSavedGames();
         DateFormat timeFormat = android.text.format.DateFormat.getTimeFormat(getApplicationContext());
         timeFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -108,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
         dateFormat.setTimeZone(TimeZone.getDefault());
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
+        //add saved game panels to the main layout as they are loaded dynamically
         ConstraintLayout mainView = findViewById(R.id.main_container);
         int lastId = R.id.app_installed_status;
         for (int i = 0; i < iNumberOfSavedGames; i++) {
@@ -119,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
             View inflatedLayout = inflater.inflate(R.layout.save_game_panel, mainView,false);
             inflatedLayout.setId(INFLATED_PANELS_BASE_ID + i);
             mainView.addView(inflatedLayout);
+            //add constraints to each generated panel to put one under the other
             ConstraintSet set = new ConstraintSet();
             set.clone(mainView);
             set.connect(inflatedLayout.getId(),ConstraintSet.LEFT,mainView.getId(),ConstraintSet.LEFT,Utils.convertDpToPixel(8,this));
@@ -134,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
             TextView tvPartyName = inflatedLayout.findViewById(R.id.party_name);
             TextView tvChapterName = inflatedLayout.findViewById(R.id.chapter);
 
+            //populate the filelds with loaded data
             long lDate = Utils.getSavedGameDate(i);
             Date date = new Date(lDate);
             String timeOutput = timeFormat.format(date);
@@ -153,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
 
             tvChapterName.setText( String.format(getString(R.string.game_chapter), Utils.getSavedGameChapter(i)));
 
+            //for the heros generate images dynamically
             int numberOfHeros = Utils.getSavedGameNumOfHeroes(i);
             LinearLayout heroslayout = inflatedLayout.findViewById(R.id.heroes_img_container);
             for (int j = 0; j < numberOfHeros; j++) {
@@ -161,6 +169,7 @@ public class MainActivity extends AppCompatActivity {
                 heroslayout.addView(ivHero);
             }
 
+            //finally add a listener to move to the editor if the user clicks on a saved game panel
             final int currentSavedGameIdx = i;
             inflatedLayout.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -174,12 +183,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //when the user returns from a saved game we need to update the list with the new data.
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        Log.d(TAG, "onActivityResult: enter");
         if (requestCode == SAVE_GAME_EDIT_REQ_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 if (data != null) {
 
+                    //check to see if we need to reload the data
                     if (data.getBooleanExtra(RELOAD_GAME_DATA,false)) {
                         reloadSavedGames();
                     }
@@ -190,7 +202,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //remve all the saved game panels from the layout
     void clearSavedGamePanels() {
+        Log.d(TAG, "clearSavedGamePanels: Enter");
         ConstraintLayout mainView = findViewById(R.id.main_container);
         int iNumberOfSavedGames = Utils.getNumberOfSavedGames();
         for (int i = 0; i < iNumberOfSavedGames; i++) {
@@ -202,13 +216,17 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    //reload the saved games data
     void reloadSavedGames() {
+        Log.d(TAG, "reloadSavedGames: Enter");
         Utils.clearSavedGameData();
         clearSavedGamePanels();
         loadSavedGamesDetails();;
     }
 
+    //helper function to generate a image resource id from the hero ID
     public static int getHeroResIDFromHeroIdx(Context context, int heroIdx) {
+        Log.d(TAG, "getHeroResIDFromHeroIdx: Enter");
         //Generate the resource name
         String tileFileName = HERO_IMG_NAME_PREFIX + heroIdx;
 
