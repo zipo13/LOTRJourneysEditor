@@ -3,6 +3,7 @@ package il.co.woo.lotrjourneyseditor;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 
@@ -45,13 +46,10 @@ public class MainActivity extends AppCompatActivity {
     public static final String PREFS_NAME = "LOTR_prefs_file";
     public static final String PREF_SHOW_WARNING_KEY = "show_warning_key";
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-
 
         //check if we need permissions to read/write on this device
         //if we cannot obtain them close the app as there is nothing to be done without them
@@ -71,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
         if (preferences.getBoolean(PREF_SHOW_WARNING_KEY,getResources().getBoolean(R.bool.show_warning_def_value))) {
 
             View checkBoxView = View.inflate(this, R.layout.alert_checkbox, null);
-            CheckBox checkBox = (CheckBox) checkBoxView.findViewById(R.id.checkbox);
+            CheckBox checkBox = checkBoxView.findViewById(R.id.checkbox);
             checkBox.setText(R.string.dont_show_again);
             checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
@@ -86,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
             });
 
             //show an alert dialog to warn the user about this app being experimental
-            new AlertDialog.Builder(this)
+            new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this,R.style.AlertDialogTheme))
                     .setTitle(getString(R.string.warning_title))
                     .setMessage(getString(R.string.app_warning_msg))
                     .setView(checkBoxView)
@@ -105,28 +103,26 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode,
                                            String[] permissions, int[] grantResults) {
         Log.d(TAG, "onRequestPermissionsResult: Enter");
-        switch (requestCode) {
-            case Utils.PERMISSIONS_REQUEST_READ_WRITE_EXTERNAL_STORAGE: {
-                // If request is cancelled, the result arrays are empty.
-                if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    loadSavedGamesDetails();
-                } else {
-                    // permission denied as the user did not give us permission to read the saved games
-                    //give an alert explaining why the app will close now.
-                    new AlertDialog.Builder(this)
-                            .setTitle(getString(R.string.permission_request))
-                            .setMessage(getString(R.string.permission_denied_msg))
-                            // The dialog is automatically dismissed when a dialog button is clicked.
-                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    finish();
-                                }
-                            })
-                            // A null listener allows the button to dismiss the dialog and take no further action.
-                            .setIcon(android.R.drawable.ic_dialog_info)
-                            .show();
-                }
+        // If request is cancelled, the result arrays are empty.
+        if (requestCode == Utils.PERMISSIONS_REQUEST_READ_WRITE_EXTERNAL_STORAGE) {
+            if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                loadSavedGamesDetails();
+            } else {
+                // permission denied as the user did not give us permission to read the saved games
+                //give an alert explaining why the app will close now.
+                new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this, R.style.AlertDialogTheme))
+                        .setTitle(getString(R.string.permission_request))
+                        .setMessage(getString(R.string.permission_denied_msg))
+                        // The dialog is automatically dismissed when a dialog button is clicked.
+                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                finish();
+                            }
+                        })
+                        // A null listener allows the button to dismiss the dialog and take no further action.
+                        .setIcon(android.R.drawable.ic_dialog_info)
+                        .show();
             }
         }
     }

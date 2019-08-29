@@ -11,6 +11,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.view.ContextThemeWrapper;
 
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
@@ -27,8 +28,8 @@ import java.util.List;
 
 class Utils {
 
-    public static final String INTENT_EXTRA_SAVE_GAME_ID_KEY = "SAVED_GAME_ID";
-    public static final int PERMISSIONS_REQUEST_READ_WRITE_EXTERNAL_STORAGE = 5487;
+    static final String INTENT_EXTRA_SAVE_GAME_ID_KEY = "SAVED_GAME_ID";
+    static final int PERMISSIONS_REQUEST_READ_WRITE_EXTERNAL_STORAGE = 5487;
     private static int MAX_SVAED_GAMES = 5;
 
     private static final String TAG = "Utils";
@@ -746,7 +747,7 @@ class Utils {
             if (requester.shouldShowRequestPermissionRationale(
                     Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                 //show a message explaining to the user why the Read/Write permission is needed
-                new AlertDialog.Builder(requester)
+                new AlertDialog.Builder(new ContextThemeWrapper(requester,R.style.AlertDialogTheme))
                         .setTitle(requester.getString(R.string.permission_request))
                         .setMessage(requester.getString(R.string.permission_request_msg))
                         // The dialog is automatically dismissed when a dialog button is clicked.

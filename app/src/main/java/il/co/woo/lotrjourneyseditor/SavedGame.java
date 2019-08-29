@@ -2,6 +2,7 @@ package il.co.woo.lotrjourneyseditor;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import android.app.Activity;
@@ -35,9 +36,10 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_saved_game);
+        setTitle(R.string.edit_svae_game_title);
 
 
-        //the extras shouold hold the save game id
+        //the extras should hold the save game id
         Bundle extras = getIntent().getExtras();
         if (extras == null) {
             return;
@@ -192,7 +194,7 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
         //try and save the game data
         //alert the user on operation failure
         if (!Utils.saveSavedGameToFile(this, mSaveGameIdx,export)) {
-            new AlertDialog.Builder(this)
+            new AlertDialog.Builder(new ContextThemeWrapper(SavedGame.this,R.style.AlertDialogTheme))
                     .setTitle(getString(R.string.save_failed_msg_title))
                     .setMessage(getString(R.string.save_failed_msg))
                     // The dialog is automatically dismissed when a dialog button is clicked.
@@ -220,7 +222,7 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
                 //save and pass the export true parameter to the method, indicating to export the saved file
                 //one the save operation is done
                 saveToFile(true);
-                new AlertDialog.Builder(this)
+                new AlertDialog.Builder(new ContextThemeWrapper(SavedGame.this,R.style.AlertDialogTheme))
                         .setTitle(getString(R.string.export_dialog_title))
                         .setMessage(getString(R.string.export_message))
                         // The dialog is automatically dismissed when a dialog button is clicked.

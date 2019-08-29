@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">LOTR Journeys Editor</string>
-    <string name="usage_warning">Please note: This is an experimental app. Use at your own risk.</string>
     <string name="app_located_on_device">Lord Of the Rings - Journeys In Middle-earth was found on this device</string>
     <string name="app_not_located_on_device">Lord Of the Rings - Journeys In Middle-earth was not found on this device</string>
     <string name="game_difficulty_hard">Hard</string>
@@ -15,7 +14,7 @@
     <string name="hero_image">Hero Image</string>
     <string name="save">Save</string>
     <string name="hero_not_init">N/A</string>
-    <string name="export">Export...</string>
+    <string name="export">Export…</string>
     <string name="restore_from_backup">Restore from backup</string>
     <string name="export_message">Save game file was saved and exported to the \'Downloads\' folder on your device.\nLook for a file named \'SaveGameA\' and copy it to the device you want to move the saved game to.</string>
     <string name="export_dialog_title">Export save game file</string>
@@ -28,6 +27,7 @@
     <string name="app_warning_msg">This app is experimental and might damage save game files unintentionally. Backups are made but note that the developer takes no responsibility about any damage that might be caused by this app.</string>
     <string name="i_understand">I Understand</string>
     <string name="dont_show_again">Don\'t show me again</string>
+    <string name="edit_svae_game_title">Edit saved game</string>
     <string-array name="chapter_names">
         <item>Chapter 1</item>
         <item>Chapter 2</item>
