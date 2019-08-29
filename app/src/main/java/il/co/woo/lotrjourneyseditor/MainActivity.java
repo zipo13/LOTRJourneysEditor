@@ -11,6 +11,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -19,6 +20,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -39,11 +42,16 @@ public class MainActivity extends AppCompatActivity {
     private static final int SAVE_GAME_EDIT_REQ_CODE = 456;
     public static final String RELOAD_GAME_DATA = "reload_game_data";
 
+    public static final String PREFS_NAME = "LOTR_prefs_file";
+    public static final String PREF_SHOW_WARNING_KEY = "show_warning_key";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
 
         //check if we need permissions to read/write on this device
         //if we cannot obtain them close the app as there is nothing to be done without them
@@ -51,6 +59,42 @@ public class MainActivity extends AppCompatActivity {
             Utils.checkReadWritePermissions(this);
         } else {
             loadSavedGamesDetails();
+        }
+
+        showWarningMsgDlg();
+    }
+
+    //show a warning message to the user abut this app being experimental
+    private void showWarningMsgDlg() {
+        //Show a warning message only if the user has asked for it
+        final SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        if (preferences.getBoolean(PREF_SHOW_WARNING_KEY,getResources().getBoolean(R.bool.show_warning_def_value))) {
+
+            View checkBoxView = View.inflate(this, R.layout.alert_checkbox, null);
+            CheckBox checkBox = (CheckBox) checkBoxView.findViewById(R.id.checkbox);
+            checkBox.setText(R.string.dont_show_again);
+            checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+                //check if the user doesn't want to see ths message again
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putBoolean(PREF_SHOW_WARNING_KEY,!isChecked);
+                    editor.commit();
+                }
+            });
+
+            //show an alert dialog to warn the user about this app being experimental
+            new AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.warning_title))
+                    .setMessage(getString(R.string.app_warning_msg))
+                    .setView(checkBoxView)
+                    // The dialog is automatically dismissed when a dialog button is clicked.
+                    .setPositiveButton(R.string.i_understand,null)
+                    // A null listener allows the button to dismiss the dialog and take no further action.
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
         }
     }
 

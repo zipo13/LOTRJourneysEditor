@@ -24,6 +24,10 @@
     <string name="permission_denied_msg">Since no read/write permission were given the app will now close.</string>
     <string name="save_failed_msg_title">Saving failed</string>
     <string name="save_failed_msg">Saving the changes to the save game file failed.</string>
+    <string name="warning_title">Warning</string>
+    <string name="app_warning_msg">This app is experimental and might damage save game files unintentionally. Backups are made but note that the developer takes no responsibility about any damage that might be caused by this app.</string>
+    <string name="i_understand">I Understand</string>
+    <string name="dont_show_again">Don\'t show me again</string>
     <string-array name="chapter_names">
         <item>Chapter 1</item>
         <item>Chapter 2</item>
