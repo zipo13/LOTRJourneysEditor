@@ -8,50 +8,57 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:baselineAligned="false">
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:layout_weight="2">
-            <androidx.appcompat.widget.AppCompatTextView
+            android:layout_weight="3">
+            <il.co.woo.lotrjourneyseditor.FontTextView
                 android:id="@+id/save_date"
                 android:layout_width="match_parent"
                 android:layout_height="32dp"
-                tools:text="08/15/2019"/>
-            <androidx.appcompat.widget.AppCompatTextView
+                tools:text="08/15/2019"
+                style="@style/AppText"/>
+            <il.co.woo.lotrjourneyseditor.FontTextView
                 android:id="@+id/save_time"
                 android:layout_width="match_parent"
                 android:layout_height="32dp"
-                tools:text="10:25"/>
-            <androidx.appcompat.widget.AppCompatTextView
+                tools:text="10:25"
+                style="@style/AppText"/>
+            <il.co.woo.lotrjourneyseditor.FontTextView
                 android:id="@+id/save_difficulty"
                 android:layout_width="match_parent"
                 android:layout_height="32dp"
-                tools:text="NORMAL"/>
+                tools:text="NORMAL"
+                style="@style/AppText"/>
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:layout_weight="4">
-            <androidx.appcompat.widget.AppCompatTextView
+            android:layout_weight="3">
+            <il.co.woo.lotrjourneyseditor.FontTextView
                 android:id="@+id/party_name"
                 android:layout_width="match_parent"
                 android:layout_height="32dp"
-                tools:text="Funky Monkeys"/>
-            <androidx.appcompat.widget.AppCompatTextView
+                tools:text="Funky Monkeys"
+                style="@style/AppText"/>
+            <il.co.woo.lotrjourneyseditor.FontTextView
                 android:id="@+id/chapter"
                 android:layout_width="match_parent"
                 android:layout_height="32dp"
-                tools:text="CH7 - Bones of Arnor"/>
+                tools:text="CH7 - Bones of Arnor"
+                style="@style/AppText"/>
         </LinearLayout>
         <LinearLayout
             android:id="@+id/heroes_img_container"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:orientation="horizontal"
-            android:layout_weight="5">
+            android:layout_weight="9"
+            android:layout_marginLeft="2dp">
 
         </LinearLayout>
     </LinearLayout>

@@ -13,6 +13,7 @@
         android:scaleType="fitXY"
         android:isScrollContainer="false"
         android:alpha="0.35"
+        android:contentDescription=""
         />
     <ScrollView
         android:id="@+id/saved_game_scroll_view"
@@ -30,7 +31,7 @@
 
 
 
-            <TextView
+            <il.co.woo.lotrjourneyseditor.FontTextView
                 android:id="@+id/party_name_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -40,7 +41,8 @@
                 android:text="@string/party_name"
                 android:textSize="20sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                style="@style/AppText"/>
 
             <EditText
                 android:id="@+id/party_name"
@@ -57,7 +59,7 @@
                 tools:text="Funky Monkeys" />
 
 
-            <TextView
+            <il.co.woo.lotrjourneyseditor.FontTextView
                 android:id="@+id/lore_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -67,7 +69,8 @@
                 android:text="@string/lore"
                 android:textSize="20sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/party_name_label" />
+                app:layout_constraintTop_toBottomOf="@id/party_name_label"
+                style="@style/AppText"/>
 
 
             <EditText
@@ -83,7 +86,7 @@
                 app:layout_constraintTop_toBottomOf="@id/party_name"
                 tools:text="50" />
 
-            <TextView
+            <il.co.woo.lotrjourneyseditor.FontTextView
                 android:id="@+id/last_stands_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -93,7 +96,8 @@
                 android:text="@string/last_stands_failed"
                 android:textSize="20sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/lore_label" />
+                app:layout_constraintTop_toBottomOf="@id/lore_label"
+                style="@style/AppText"/>
 
             <EditText
                 android:id="@+id/last_stands"
@@ -108,7 +112,7 @@
                 app:layout_constraintTop_toBottomOf="@id/party_lore"
                 tools:text="50" />
 
-            <TextView
+            <il.co.woo.lotrjourneyseditor.FontTextView
                 android:id="@+id/chapter_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -118,7 +122,8 @@
                 android:text="@string/current_chapter"
                 android:textSize="20sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/last_stands_label" />
+                app:layout_constraintTop_toBottomOf="@id/last_stands_label"
+                style="@style/AppText"/>
 
             <Spinner
                 android:id="@+id/current_chapter"
@@ -129,7 +134,7 @@
                 app:layout_constraintStart_toStartOf="@id/party_name"
                 app:layout_constraintTop_toBottomOf="@id/party_lore" />
 
-            <TextView
+            <il.co.woo.lotrjourneyseditor.FontTextView
                 android:id="@+id/difficulty_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -139,7 +144,8 @@
                 android:text="@string/difficulty"
                 android:textSize="20sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/chapter_label" />
+                app:layout_constraintTop_toBottomOf="@id/chapter_label"
+                style="@style/AppText"/>
 
 
             <Spinner

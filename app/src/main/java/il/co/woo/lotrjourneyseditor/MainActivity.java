@@ -201,12 +201,17 @@ public class MainActivity extends AppCompatActivity {
             tvChapterName.setText( String.format(getString(R.string.game_chapter), Utils.getSavedGameChapter(i)));
 
             //for the heros generate images dynamically
-            int numberOfHeros = Utils.getSavedGameNumOfHeroes(i);
-            LinearLayout heroslayout = inflatedLayout.findViewById(R.id.heroes_img_container);
-            for (int j = 0; j < numberOfHeros; j++) {
+            int numberOfHeroes = Utils.getSavedGameNumOfHeroes(i);
+            LinearLayout heroesLayout = inflatedLayout.findViewById(R.id.heroes_img_container);
+            for (int j = 0; j < numberOfHeroes; j++) {
                 int imgResId = getHeroResIDFromHeroIdx(this,Utils.getSavedGameHeroType(i,j));
                 ImageView ivHero = createImageView(HEROES_IMAGE_ID_BASE + i*10+j,80,80,imgResId);
-                heroslayout.addView(ivHero);
+                heroesLayout.addView(ivHero);
+                if (ivHero.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                    ViewGroup.MarginLayoutParams p = (ViewGroup.MarginLayoutParams) ivHero.getLayoutParams();
+                    p.setMargins(Utils.convertDpToPixel(1,this),0,0,0);
+                    ivHero.requestLayout();
+                }
             }
 
             //finally add a listener to move to the editor if the user clicks on a saved game panel
@@ -261,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "reloadSavedGames: Enter");
         Utils.clearSavedGameData();
         clearSavedGamePanels();
-        loadSavedGamesDetails();;
+        loadSavedGamesDetails();
     }
 
     //helper function to generate a image resource id from the hero ID

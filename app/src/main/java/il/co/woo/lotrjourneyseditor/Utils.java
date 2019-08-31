@@ -253,6 +253,16 @@ class Utils {
         return null;
     }
 
+    //get the hero name from its type
+    static String getHeroNameFromType(Context context,int heroType) {
+        String[] heroNames = context.getResources().getStringArray(R.array.hero_names);
+        heroType--;//the heroType is 1 based and the array is 0 based
+        if (heroType < heroNames.length) {
+            return heroNames[heroType];
+        }
+        return "";
+    }
+
     //get the hero type from the saved game
     //the hero types (gimly, legolas ...) are actually just numbered from 1-6 making it easy to math a picture to them
     static int getSavedGameHeroType(int savedGameId, int heroIdx) {
@@ -280,7 +290,7 @@ class Utils {
             Log.d(TAG, "getSavedGameHeroType: JSON error. Could not get '" + FFG_HEROINFO_ARRAY + "' from saved game");
         }
 
-        return 0;
+        return FFG_HERO_ID_INVALID;
     }
 
     //get the number of heros in this saved game
@@ -364,6 +374,8 @@ class Utils {
     static void setSavedGamePartyName(int savedGameId,String partyName) {
         Log.d(TAG, "setSavedGamePartyName: Enter");
         JSONObject jsonSavedGame = getSavedGamePartyNameObj(savedGameId);
+        if (jsonSavedGame == null)
+            return;
         try {
             jsonSavedGame.put(FFG_PARTY_NAME,partyName);
         } catch (JSONException e) {
@@ -387,14 +399,13 @@ class Utils {
         if (jsonObj == null)
             return GAME_NORMAL;
 
-        int gameDifficulty = GAME_NORMAL;
         try {
             return jsonObj.getInt(FFG_DIFFICULTY);
         } catch (JSONException e) {
             Log.d(TAG, "getSavedGameDifficulty: JSON error. Could not get '" + FFG_DIFFICULTY + "' from saved game");
         }
 
-        return gameDifficulty;
+        return GAME_NORMAL;
     }
 
     //set the new difficulty

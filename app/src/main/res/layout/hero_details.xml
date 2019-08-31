@@ -18,16 +18,17 @@
         android:contentDescription="@string/hero_image"
         />
 
-    <TextView
-    android:id="@+id/textView"
+    <il.co.woo.lotrjourneyseditor.FontTextView
+    android:id="@+id/hero_name"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_marginLeft="8dp"
     android:layout_marginStart="8dp"
     android:textSize="20sp"
-    tools:text="Gimly"/>
+    tools:text="Gimly"
+    style="@style/AppText"/>
 
-    <TextView
+    <il.co.woo.lotrjourneyseditor.FontTextView
         android:id="@+id/hero_xp_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -35,7 +36,8 @@
         android:textSize="20sp"
         android:layout_marginLeft="8dp"
         android:layout_marginStart="8dp"
-        android:labelFor="@id/hero_xp"/>
+        android:labelFor="@id/hero_xp"
+        style="@style/AppText"/>
 
     <EditText
         android:id="@+id/hero_xp"

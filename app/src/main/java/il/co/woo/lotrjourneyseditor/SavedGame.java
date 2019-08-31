@@ -124,6 +124,11 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
             ImageView ivHeroImage = inflatedLayout.findViewById(R.id.hero_image);
             ivHeroImage.setImageResource(resID);
 
+            //set the hero name
+            FontTextView tvHeroName = inflatedLayout.findViewById(R.id.hero_name);
+            String heroName = Utils.getHeroNameFromType(this,heroType);
+            tvHeroName.setText(heroName);
+
             //get the hero XP
             EditText etXP = inflatedLayout.findViewById(R.id.hero_xp);
             int xp = Utils.getSaveGameHeroXP(mSaveGameIdx,i);
