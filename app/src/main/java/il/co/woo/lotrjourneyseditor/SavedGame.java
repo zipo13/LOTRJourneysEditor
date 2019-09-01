@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -22,7 +23,7 @@ import android.widget.Spinner;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-public class SavedGame extends AppCompatActivity implements View.OnClickListener {
+public class SavedGame extends AppCompatActivity implements View.OnClickListener, android.text.TextWatcher {
 
     private static final String TAG = "SavedGame";
     private final int INFLATED_PANELS_BASE_ID = 128754;
@@ -36,7 +37,7 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_saved_game);
-        setTitle(R.string.edit_svae_game_title);
+        setTitle(R.string.edit_save_game_title);
 
 
         //the extras should hold the save game id
@@ -56,11 +57,13 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
         if (mSaveGameIdx < 0)
             return;
 
-
-
         EditText etPartyName = findViewById(R.id.party_name);
         EditText etLore = findViewById(R.id.party_lore);
         EditText etLastStands = findViewById(R.id.last_stands);
+
+        etPartyName.addTextChangedListener(this);
+        etLore.addTextChangedListener(this);
+        etLastStands.addTextChangedListener(this);
 
         //listen to cliks on the save button
         FloatingActionButton fabSaveButton = findViewById(R.id.save_game_button);
@@ -124,6 +127,7 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
             ImageView ivHeroImage = inflatedLayout.findViewById(R.id.hero_image);
             ivHeroImage.setImageResource(resID);
 
+
             //set the hero name
             FontTextView tvHeroName = inflatedLayout.findViewById(R.id.hero_name);
             String heroName = Utils.getHeroNameFromType(this,heroType);
@@ -131,6 +135,7 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
 
             //get the hero XP
             EditText etXP = inflatedLayout.findViewById(R.id.hero_xp);
+            etXP.addTextChangedListener(this);
             int xp = Utils.getSaveGameHeroXP(mSaveGameIdx,i);
             //if the XP is invalid put a message instead and make the control disabled
             if (xp != Utils.FFG_INVALID_XP) {
@@ -149,29 +154,33 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
     public void onClick(View v) {
         Log.d(TAG, "onClick: Enter");
         saveToFile(false);
+        invalidateOptionsMenu();
     }
 
     //save the save game data to the physical file
     private void saveToFile(boolean export) {
         Log.d(TAG, "saveToFile: Enter");
-        //first set the data to memeory and only then save to file
+        //first set the data to memory and only then save to file
+
+        if (!isDataValid()) {
+            return;
+        }
 
         //save the game data
         //lore
         EditText etLore = findViewById(R.id.party_lore);
         int lore = Integer.parseInt(etLore.getText().toString());
-        Utils.setSavedGameLore(mSaveGameIdx,lore);
-
 
         //party name
         EditText etPartyName = findViewById(R.id.party_name);
         String partyName = etPartyName.getText().toString();
-        Utils.setSavedGamePartyName(mSaveGameIdx,partyName);
-
 
         //last stands
         EditText etLastStandFails = findViewById(R.id.last_stands);
         int lastStandFails = Integer.parseInt(etLastStandFails.getText().toString());
+
+        Utils.setSavedGamePartyName(mSaveGameIdx,partyName);
+        Utils.setSavedGameLore(mSaveGameIdx,lore);
         Utils.setSavedGameLastStands(mSaveGameIdx,lastStandFails);
 
         //difficulty
@@ -182,7 +191,7 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
         //the new chapter
         Spinner spChapter = findViewById(R.id.current_chapter);
         int chapter = spChapter.getSelectedItemPosition();
-        chapter++;//the chpter in the spinner is 0 based and in the file 1 based
+        chapter++;//the chapter in the spinner is 0 based and in the file 1 based
         Utils.setSavedGameChapter(mSaveGameIdx,chapter);
 
         //go over the heroes and update the XP
@@ -218,6 +227,19 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
         return true;
     }
 
+    @Override
+    public boolean onPrepareOptionsMenu (Menu menu) {
+        if (!isDataValid()) {
+            menu.findItem(R.id.export).setEnabled(false);
+            menu.findItem(R.id.save).setEnabled(false);
+        }
+
+        if (!Utils.restoreSavedGameFiles(this,mSaveGameIdx,true)) {
+            menu.findItem(R.id.restore).setEnabled(false);
+        }
+        return true;
+    }
+
     //handler of the options menu selections
     public boolean onOptionsItemSelected(MenuItem item) {
 
@@ -237,7 +259,7 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
                         .show();
                 return true;
             case R.id.restore://restore save game from backup
-                Utils.restoreSavedGameFiles(this,mSaveGameIdx);
+                Utils.restoreSavedGameFiles(this,mSaveGameIdx,false);
                 sendDataBackToPreviousActivity();
                 finish();
                 return true;
@@ -268,4 +290,66 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
         setResult(Activity.RESULT_OK, intent);
     }
 
+    //check if these is invalid data like empty strings or missing numbers
+    private boolean isDataValid() {
+        EditText etLore = findViewById(R.id.party_lore);
+        try {
+            Integer.parseInt(etLore.getText().toString());
+        } catch (NumberFormatException e) {
+            Log.d(TAG, "isDataValid: Lore number is not valid");
+            return false;
+        }
+
+        //party name
+        EditText etPartyName = findViewById(R.id.party_name);
+        String partyName = etPartyName.getText().toString();
+        if (partyName.isEmpty()) {
+            Log.d(TAG, "isDataValid: Party name is not valid");
+            return false;
+        }
+
+        //last stands
+        EditText etLastStandFails = findViewById(R.id.last_stands);
+        try {
+            Integer.parseInt(etLastStandFails.getText().toString());
+        } catch (NumberFormatException e) {
+            Log.d(TAG, "isDataValid: Last stands number is not valid");
+            return false;
+        }
+
+        //go over the heroes and update the XP
+        int numOfHeroes = Utils.getSavedGameNumOfHeroes(mSaveGameIdx);
+        for (int i=  0; i < numOfHeroes; i++) {
+            View heroView = findViewById(INFLATED_PANELS_BASE_ID + i);
+            if ((heroView != null) && (mHeroDataReady[i])){
+                EditText etHeroXP = heroView.findViewById(R.id.hero_xp);
+                try {
+                    Integer.parseInt(etHeroXP.getText().toString());
+                } catch (NumberFormatException e) {
+                    Log.d(TAG, "isDataValid: Hero XP invalid");
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+    }
+
+    //after each text change check if the FAB needs to be enabled or disabled
+    @Override
+    public void afterTextChanged(Editable s) {
+
+        FloatingActionButton fab = findViewById(R.id.save_game_button);
+        fab.setEnabled(isDataValid());
+        invalidateOptionsMenu();
+    }
+
+    @Override
+    public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+    }
 }

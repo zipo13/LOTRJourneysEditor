@@ -12,11 +12,13 @@
         android:layout_width="80dp"
         android:layout_height="80dp"
         app:srcCompat="@drawable/hero_1"
-        android:layout_marginLeft="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginLeft="4dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp"
         android:contentDescription="@string/hero_image"
-        />
+        android:background="#fff"
+        android:elevation="3dp"/>
 
     <il.co.woo.lotrjourneyseditor.FontTextView
     android:id="@+id/hero_name"
@@ -25,7 +27,7 @@
     android:layout_marginLeft="8dp"
     android:layout_marginStart="8dp"
     android:textSize="20sp"
-    tools:text="Gimly"
+    tools:text="Gimli"
     style="@style/AppText"/>
 
     <il.co.woo.lotrjourneyseditor.FontTextView
@@ -41,13 +43,15 @@
 
     <EditText
         android:id="@+id/hero_xp"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginRight="8dp"
         android:layout_marginLeft="8dp"
         android:inputType="numberDecimal"
         tools:text="20"
-        android:autofillHints=""/>
+        android:textAlignment="center"
+        android:hint="@string/cannot_be_empty"
+        android:textColorHint="@android:color/holo_red_dark"/>
 
 
 </LinearLayout>

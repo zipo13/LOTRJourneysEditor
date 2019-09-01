@@ -16,13 +16,16 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -50,6 +53,22 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        ImageButton infoButton = findViewById(R.id.info_button);
+        infoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //show an alert with some credits
+                new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this,R.style.AlertDialogTheme))
+                        .setTitle(getString(R.string.credits_title))
+                        .setMessage(getString(R.string.credits_msg))
+                        // The dialog is automatically dismissed when a dialog button is clicked.
+                        .setPositiveButton(android.R.string.ok,null)
+                        // A null listener allows the button to dismiss the dialog and take no further action.
+                        .setIcon(android.R.drawable.ic_dialog_info)
+                        .show();
+            }
+        });
 
         //check if we need permissions to read/write on this device
         //if we cannot obtain them close the app as there is nothing to be done without them
@@ -97,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //Check for external storage write permissions.
-    //If non are given do not bother with adat loading as it will fail
+    //If non are given do not bother with data loading as it will fail
     //just close the app with an error message
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -127,19 +146,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     //Load all the saved game details from the device.
     void loadSavedGamesDetails() {
         Log.d(TAG, "loadSavedGamesDetails: Enter");
 
         //populate some textviews with information about locating the LOTR JIME app
-        TextView tvAppInstalled = findViewById(R.id.app_installed_status);
+        Button ffgLinkButton = findViewById(R.id.ffg_jime_link_button);
         if (Utils.lotrAppInstalled(this)) {
-            tvAppInstalled.setText(getString(R.string.app_located_on_device));
+            findViewById(R.id.app_installed_status).setVisibility(View.GONE);
+            ffgLinkButton.setVisibility(View.GONE);
 
         } else {
             //the app was not located so there is nothing to load.
-            tvAppInstalled.setText(getString(R.string.app_not_located_on_device));
+            findViewById(R.id.edit_save_game).setVisibility(View.GONE);
+            ffgLinkButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + Utils.LOTR_PKG_NAME)));
+                }
+            });
             return;
         }
 
@@ -154,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
 
         //add saved game panels to the main layout as they are loaded dynamically
         ConstraintLayout mainView = findViewById(R.id.main_container);
-        int lastId = R.id.app_installed_status;
+        int lastId = R.id.edit_save_game;
         for (int i = 0; i < iNumberOfSavedGames; i++) {
 
             LayoutInflater inflater = LayoutInflater.from(this);
@@ -200,12 +225,12 @@ public class MainActivity extends AppCompatActivity {
 
             tvChapterName.setText( String.format(getString(R.string.game_chapter), Utils.getSavedGameChapter(i)));
 
-            //for the heros generate images dynamically
+            //for the heroes generate images dynamically
             int numberOfHeroes = Utils.getSavedGameNumOfHeroes(i);
             LinearLayout heroesLayout = inflatedLayout.findViewById(R.id.heroes_img_container);
             for (int j = 0; j < numberOfHeroes; j++) {
                 int imgResId = getHeroResIDFromHeroIdx(this,Utils.getSavedGameHeroType(i,j));
-                ImageView ivHero = createImageView(HEROES_IMAGE_ID_BASE + i*10+j,80,80,imgResId);
+                ImageView ivHero = createImageView(HEROES_IMAGE_ID_BASE + i*10+j,Utils.convertDpToPixel(40,this),Utils.convertDpToPixel(40,this),imgResId);
                 heroesLayout.addView(ivHero);
                 if (ivHero.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
                     ViewGroup.MarginLayoutParams p = (ViewGroup.MarginLayoutParams) ivHero.getLayoutParams();
@@ -247,7 +272,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //remve all the saved game panels from the layout
+    //remove all the saved game panels from the layout
     void clearSavedGamePanels() {
         Log.d(TAG, "clearSavedGamePanels: Enter");
         ConstraintLayout mainView = findViewById(R.id.main_container);

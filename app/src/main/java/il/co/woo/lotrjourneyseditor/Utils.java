@@ -33,7 +33,7 @@ class Utils {
     private static int MAX_SVAED_GAMES = 5;
 
     private static final String TAG = "Utils";
-    private static final String LOTR_PKG_NAME = "com.fantasyflightgames.jime";
+    static final String LOTR_PKG_NAME = "com.fantasyflightgames.jime";
     private static final String LOTR_FILE_PATH = "Android/data/" + LOTR_PKG_NAME;
     private static final String LOTR_SAVED_GAMES_PATH = LOTR_FILE_PATH + "/files/SavedGames";
     private static final String LOG_FILE_A_NAME = "LogA.txt";
@@ -361,6 +361,10 @@ class Utils {
     static String getSavedGamePartyName(int savedGameId) {
         Log.d(TAG, "getSavedGamePartyName: Enter");
         JSONObject jsonSavedGame = getSavedGamePartyNameObj(savedGameId);
+        if (jsonSavedGame == null) {
+            return "";
+        }
+
         try {
             return jsonSavedGame.getString(FFG_PARTY_NAME);
         } catch (JSONException e) {
@@ -655,14 +659,15 @@ class Utils {
     }
 
     //restore backup files to the save game files
-    static boolean restoreSavedGameFiles(Context context, int savedGameNum) {
+    static boolean restoreSavedGameFiles(Context context, int savedGameNum,boolean checkOnly) {
         Log.d(TAG, "restoreSavedGameFiles: Enter");
         String[] savedGamesPaths = getValidSavedGamePaths();
-        if (savedGamesPaths.length < savedGameNum) {
+        if (savedGamesPaths.length <= savedGameNum) {
             Log.d(TAG, "restoreSavedGameFiles: Saved game number too big than the current saved games - exiting");
             return false;
         }
 
+        boolean restoreSuccess = false;
         //go over the files and check if there is a .bak file
         String pathToSavedGame = savedGamesPaths[savedGameNum];
         String[] fileNames = {SAVE_FILE_A_NAME,SAVE_FILE_B_NAME,LOG_FILE_A_NAME,LOG_FILE_B_NAME};
@@ -670,21 +675,27 @@ class Utils {
             File buFile = new File(pathToSavedGame + "/" + fileName + SAVE_FILE_BACKUP_EXT);
             File gameFile = new File(pathToSavedGame + "/" + fileName);
             if (buFile.exists()) {
+                //if this was only to check the existence of backup files
+                //end the method here
+                if (checkOnly) {
+                    return true;
+                }
 
                 //try to restore the game file
                 if ((gameFile.exists()) && (!gameFile.delete())) {
                     Log.d(TAG, "restoreSavedGameFiles: failed to delete game file.");
                 } else {
-                    buFile.renameTo(gameFile);
-                    buFile.delete();//delete the backup file after restoring it
+                    //delete the backup file after restoring it
+                    if ((buFile.renameTo(gameFile)) && (buFile.delete())) {
+                        restoreSuccess = true;
+                    }
                 }
             }
-
         }
-        return true;
+        return restoreSuccess;
     }
 
-    //Save the JSON save game sturcture that is currently in memory to a file
+    //Save the JSON save game structure that is currently in memory to a file
     static boolean saveSavedGameToFile(Context context, int savedGameNum,boolean export) {
         Log.d(TAG, "saveSavedGameToFile: Enter");
         //check to see if the save game exists
@@ -719,7 +730,7 @@ class Utils {
         try {
             String encoding  = null;//to avoid ambiguity
             FileUtils.writeStringToFile(newSavedGame, savedGame.toString(),encoding);
-            //duplicate firl A to fie B - not sure why but all the ave game have it so....
+            //duplicate file A to file B - not sure why but all the ave game have it so....
             FileUtils.copyFile(newSavedGame,new File(pathToSavedGame + "/" + SAVE_FILE_B_NAME) );
             //check if this is also an export operation
             if (export) {
