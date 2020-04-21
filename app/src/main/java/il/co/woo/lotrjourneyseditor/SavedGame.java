@@ -95,8 +95,12 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
         spDifficulty.setAdapter(difficultyAdapter);
 
         //set the current difficulty
-        int savedGameDifficulty = Utils.getSavedGameDifficulty(mSaveGameIdx);
-        spDifficulty.setSelection(savedGameDifficulty);
+        GameDifficulty savedGameDifficulty = Utils.getSavedGameDifficulty(mSaveGameIdx);
+        if (spDifficulty.getAdapter().getCount() > savedGameDifficulty.ordinal()) {
+            spDifficulty.setSelection(savedGameDifficulty.ordinal());
+        }
+
+
 
 
         //for each hero create a panel to hold its image and XP

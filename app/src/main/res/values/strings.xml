@@ -3,6 +3,7 @@
     <string name="app_not_located_on_device">Lord Of the Rings - Journeys In Middle-earth was not found on this device</string>
     <string name="game_difficulty_hard">Hard</string>
     <string name="game_difficulty_normal">Normal</string>
+    <string name="game_difficulty_adventure">Adventure</string>
     <string name="game_chapter">Chapter: %d</string>
     <string name="party_name">Party Name:</string>
     <string name="lore">Lore:</string>
@@ -59,5 +60,6 @@
     <string-array name="difficulty_names">
         <item>Normal</item>
         <item>Hard</item>
+        <item>Adventure</item>
     </string-array>
 </resources>

@@ -47,8 +47,6 @@ class Utils {
     private static final String TIME_DIV = "10000";
 
     private static final String FFG_DIFFICULTY = "CampaignDifficulty";
-    private static final int GAME_NORMAL = 0;
-    static final int GAME_HARD = 1;
 
     private static final String FFG_PARTY_NAME = "PartyName";
 
@@ -398,18 +396,19 @@ class Utils {
     }
 
     //get the difficulty of the saved game
-    static int getSavedGameDifficulty(int savedGameId) {
+    static GameDifficulty getSavedGameDifficulty(int savedGameId) {
         JSONObject jsonObj = getSavedGameDifficultyObj(savedGameId);
         if (jsonObj == null)
-            return GAME_NORMAL;
+            return GameDifficulty.NORMAL;
 
         try {
-            return jsonObj.getInt(FFG_DIFFICULTY);
+            int savedDifficulty = jsonObj.getInt(FFG_DIFFICULTY);
+            return GameDifficulty.values()[savedDifficulty];
         } catch (JSONException e) {
-            Log.d(TAG, "getSavedGameDifficulty: JSON error. Could not get '" + FFG_DIFFICULTY + "' from saved game");
+            Log.d(TAG, "getSavedGameDifficulty: JSON error. Could not get a valid '" + FFG_DIFFICULTY + "' from saved game");
         }
 
-        return GAME_NORMAL;
+        return GameDifficulty.NORMAL;
     }
 
     //set the new difficulty
@@ -531,7 +530,7 @@ class Utils {
     private static boolean savedFilesExist(File folder) {
         Log.d(TAG, "savedFilesExist: Enter");
 
-        //check that the folder exsts
+        //check that the folder exists
         if ((folder == null) || (!folder.exists()))
             return false;
 

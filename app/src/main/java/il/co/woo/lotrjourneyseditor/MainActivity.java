@@ -28,6 +28,7 @@ import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import java.text.DateFormat;
@@ -214,11 +215,18 @@ public class MainActivity extends AppCompatActivity {
             tvDate.setText(dateOutput);
 
 
-            int gameDifficulty = Utils.getSavedGameDifficulty(i);
-            if (gameDifficulty == Utils.GAME_HARD)
-                tvDifficulty.setText(R.string.game_difficulty_hard);
-            else
-                tvDifficulty.setText(R.string.game_difficulty_normal);
+            GameDifficulty gameDifficulty = Utils.getSavedGameDifficulty(i);
+            switch(gameDifficulty) {
+                case HARD:
+                    tvDifficulty.setText(R.string.game_difficulty_hard);
+                    break;
+                case NORMAL:
+                    tvDifficulty.setText(R.string.game_difficulty_normal);
+                    break;
+                case ADVENTURE:
+                    tvDifficulty.setText(R.string.game_difficulty_adventure);
+                    break;
+            }
 
             tvPartyName.setText(Utils.getSavedGamePartyName(i));
 
