@@ -8,59 +8,80 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:baselineAligned="false">
+
         <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:layout_weight="3">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:baselineAligned="false">
+
+            <il.co.woo.lotrjourneyseditor.FontTextView
+                android:id="@+id/campaign_name"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                tools:text="The bones of Arnor"
+                style="@style/AppText"
+                android:layout_weight="4" />
             <il.co.woo.lotrjourneyseditor.FontTextView
                 android:id="@+id/save_date"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="32dp"
                 tools:text="08/15/2019"
-                style="@style/AppText"/>
+                style="@style/AppText"
+                android:layout_weight="1" />
             <il.co.woo.lotrjourneyseditor.FontTextView
                 android:id="@+id/save_time"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="32dp"
                 tools:text="10:25"
-                style="@style/AppText"/>
-            <il.co.woo.lotrjourneyseditor.FontTextView
-                android:id="@+id/save_difficulty"
-                android:layout_width="match_parent"
-                android:layout_height="32dp"
-                tools:text="NORMAL"
-                style="@style/AppText"/>
+                style="@style/AppText"
+                android:layout_weight="1" />
         </LinearLayout>
         <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:layout_weight="3">
-            <il.co.woo.lotrjourneyseditor.FontTextView
-                android:id="@+id/party_name"
-                android:layout_width="match_parent"
-                android:layout_height="32dp"
-                tools:text="Funky Monkeys"
-                style="@style/AppText"/>
-            <il.co.woo.lotrjourneyseditor.FontTextView
-                android:id="@+id/chapter"
-                android:layout_width="match_parent"
-                android:layout_height="32dp"
-                tools:text="CH7 - Bones of Arnor"
-                style="@style/AppText"/>
-        </LinearLayout>
-        <LinearLayout
-            android:id="@+id/heroes_img_container"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_weight="9"
-            android:layout_marginLeft="2dp">
+            android:baselineAligned="false">
 
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_weight="2"
+                android:baselineAligned="false">
+
+                <il.co.woo.lotrjourneyseditor.FontTextView
+                    android:id="@+id/party_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="32dp"
+                    tools:text="Funky Monkeys"
+                    style="@style/AppText" />
+
+                <il.co.woo.lotrjourneyseditor.FontTextView
+                    android:id="@+id/save_difficulty"
+                    android:layout_width="match_parent"
+                    android:layout_height="32dp"
+                    tools:text="Normal"
+                    style="@style/AppText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/heroes_img_container"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:layout_weight="4"
+                android:layout_marginStart="2dp"></LinearLayout>
         </LinearLayout>
+
+        <il.co.woo.lotrjourneyseditor.FontTextView
+            android:id="@+id/chapter"
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            tools:text="CH7 - Bones of Arnor"
+            style="@style/AppText" />
     </LinearLayout>
     <View
         android:layout_width="match_parent"

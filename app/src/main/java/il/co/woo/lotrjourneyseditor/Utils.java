@@ -18,9 +18,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -30,7 +28,7 @@ class Utils {
 
     static final String INTENT_EXTRA_SAVE_GAME_ID_KEY = "SAVED_GAME_ID";
     static final int PERMISSIONS_REQUEST_READ_WRITE_EXTERNAL_STORAGE = 5487;
-    private static int MAX_SVAED_GAMES = 5;
+    private final static int MAX_SAVED_GAMES = 5;
 
     private static final String TAG = "Utils";
     static final String LOTR_PKG_NAME = "com.fantasyflightgames.jime";
@@ -50,6 +48,7 @@ class Utils {
 
     private static final String FFG_PARTY_NAME = "PartyName";
 
+    private static final String FFG_CAMPAIGN = "CampaignId";
     private static final String FFG_CHAPTER = "CurrentAdventureId";
     private static final String FFG_COMPLETED_CHAPTERS = "CompletedAdventureIds";
     private static final String FFG_CURR_SCENE = "CurrentScene";
@@ -57,7 +56,8 @@ class Utils {
 
     private static final String FFG_HEROINFO_ARRAY = "HeroInfo";
     private static final String FFG_HEROINFO_ID = "Id";
-    static final int FFG_HERO_ID_INVALID = -1;
+    private static final int FFG_HERO_ID_INVALID = -1;
+
     /*
     static final int FFG_HERO_ID_ARAGORN = 1;
     static final int FFG_HERO_ID_BERAVOR = 2;
@@ -72,7 +72,7 @@ class Utils {
 
     private static final String FFS_LAST_STAND = "LastStandsFailed";
 
-    private static final String FFG_NAME  = "Name";
+    private static final String FFG_NAME = "Name";
     private static final String FFG_VALUE = "Value";
     private static final String FFG_CAMP_LORE = "Campaign/Lore";
 
@@ -84,15 +84,15 @@ class Utils {
     private static ArrayList<JSONObject> mSavedGames = null;
 
     //get the XP of a specific hero
-    static int getSaveGameHeroXP(int savedGameId,int heroIdx) {
+    static int getSaveGameHeroXP(int savedGameId, int heroIdx) {
         Log.d(TAG, "getSaveGameHeroXP: Enter");
         //get the saved game
-        JSONObject heroXpObj = getSaveGameHeroXPObj(savedGameId,heroIdx);
+        JSONObject heroXpObj = getSaveGameHeroXPObj(savedGameId, heroIdx);
         if (heroXpObj == null)
             return FFG_INVALID_XP;
 
         try {
-                return heroXpObj.getInt(FFG_XP);
+            return heroXpObj.getInt(FFG_XP);
 
         } catch (JSONException e) {
             Log.d(TAG, "getSaveGameHeroXP: JSON error. Could not get '" + FFG_XP + "' from saved game");
@@ -101,16 +101,17 @@ class Utils {
         return FFG_INVALID_XP;
     }
 
+
     //set the XP of a hero
-    static void setSaveGameHeroXP(int savedGameId,int heroIdx,int xp) {
+    static void setSaveGameHeroXP(int savedGameId, int heroIdx, int xp) {
         Log.d(TAG, "setSaveGameHeroXP: Enter");
         //get the saved game
-        JSONObject heroXpObj = getSaveGameHeroXPObj(savedGameId,heroIdx);
+        JSONObject heroXpObj = getSaveGameHeroXPObj(savedGameId, heroIdx);
         if (heroXpObj == null)
             return;
 
         try {
-            heroXpObj.put(FFG_XP,xp);
+            heroXpObj.put(FFG_XP, xp);
 
         } catch (JSONException e) {
             Log.d(TAG, "setSaveGameHeroXP: JSON error. Could not set '" + FFG_XP + "' from saved game");
@@ -118,7 +119,7 @@ class Utils {
     }
 
     //get the JSON OBJECT that holds the wanted hero XP value
-    private static JSONObject getSaveGameHeroXPObj(int savedGameId,int heroIdx) {
+    private static JSONObject getSaveGameHeroXPObj(int savedGameId, int heroIdx) {
         Log.d(TAG, "getSaveGameHeroXPObj: Enter");
         //get the saved game
         JSONObject savedGame = getSavedGame(savedGameId);
@@ -128,7 +129,7 @@ class Utils {
         }
 
         try {
-            //get the heros array
+            //get the heroes array
             JSONArray jsonArr = savedGame.getJSONArray(FFG_HEROINFO_ARRAY);
             if (heroIdx >= jsonArr.length())
                 return null;
@@ -177,7 +178,7 @@ class Utils {
             return;
 
         try {
-            lastStandObj.put(FFS_LAST_STAND,lastStands);
+            lastStandObj.put(FFS_LAST_STAND, lastStands);
         } catch (JSONException e) {
             Log.d(TAG, "setSavedGameLastStands: JSON error. Could not get '" + FFS_LAST_STAND + "' from saved game");
         }
@@ -187,11 +188,7 @@ class Utils {
     private static JSONObject getSavedGameLastStandsObj(int savedGameId) {
         Log.d(TAG, "getSavedGameLastStandsObj: Enter");
         //get the saved game
-        JSONObject savedGame = getSavedGame(savedGameId);
-        if (savedGame == null)
-            return null;
-
-        return savedGame;
+        return getSavedGame(savedGameId);
     }
 
     //get the lore of the saved game
@@ -216,8 +213,8 @@ class Utils {
         try {
             JSONObject jsonObj = getSavedGameLoreObj(savedGameId);
             if (jsonObj != null) {
-                jsonObj.put(FFG_VALUE,lore);
-        }
+                jsonObj.put(FFG_VALUE, lore);
+            }
         } catch (JSONException e) {
             Log.d(TAG, "setSavedGameLore: JSON error. Could not get '" + FFG_VALUE + "' from saved game");
         }
@@ -252,7 +249,7 @@ class Utils {
     }
 
     //get the hero name from its type
-    static String getHeroNameFromType(Context context,int heroType) {
+    static String getHeroNameFromType(Context context, int heroType) {
         String[] heroNames = context.getResources().getStringArray(R.array.hero_names);
         heroType--;//the heroType is 1 based and the array is 0 based
         if (heroType < heroNames.length) {
@@ -291,7 +288,7 @@ class Utils {
         return FFG_HERO_ID_INVALID;
     }
 
-    //get the number of heros in this saved game
+    //get the number of heroes in this saved game
     static int getSavedGameNumOfHeroes(int savedGameId) {
         Log.d(TAG, "getSavedGameNumOfHeroes: Enter");
         //get the saved game
@@ -313,6 +310,25 @@ class Utils {
     }
 
     //get the current chapter from the saved game
+
+    static int getSavedGameCampaign(int savedGameId) {
+        Log.d(TAG, "getSavedGameCampaign: Enter");
+        //get the saved game
+        JSONObject savedGame = getSavedGame(savedGameId);
+        if (savedGame == null)
+            return 0;
+
+        int campign = 0;
+        try {
+            campign = savedGame.getInt(FFG_CAMPAIGN);
+        } catch (JSONException e) {
+            Log.d(TAG, "getSavedGameCampaign: JSON error. Could not get '" + FFG_CAMPAIGN + "' from saved game");
+        }
+
+        return campign;
+    }
+
+    //get the current chapter from the saved game
     static int getSavedGameChapter(int savedGameId) {
         Log.d(TAG, "getSavedGameChapter: Enter");
         //get the saved game
@@ -320,6 +336,7 @@ class Utils {
         if (savedGame == null)
             return 0;
 
+        int campaign = getSavedGameCampaign(savedGameId);
         int chapter = 0;
         try {
             chapter = savedGame.getInt(FFG_CHAPTER);
@@ -331,7 +348,7 @@ class Utils {
     }
 
     //change the saved game chapter
-    static void setSavedGameChapter(int savedGameId, int newChapter) {
+    static void setSavedGameCampaignAndChapter(int savedGameId, int newCampaign, int userChapter, int chapterIndexToSave) {
         Log.d(TAG, "setSavedGameChapter: Enter");
         //get the saved game
         JSONObject savedGame = getSavedGame(savedGameId);
@@ -340,19 +357,17 @@ class Utils {
 
         try {
             //set the needed parameters
-            savedGame.put(FFG_CHAPTER,newChapter);//the new chapter
-            savedGame.put(FFG_CURR_SCENE,FFG_SCENE_START);//the current SCENE in the chapter - it seems that this returns to the camp scene
-            int[] completedChapters = new int[newChapter-1];//now prepare an array to indicate that all the previous scenes were completed
-            for (int i = 0; i < completedChapters.length; i++) {
-                completedChapters[i] = i+1;
-            }
+            savedGame.put(FFG_CAMPAIGN, newCampaign);//the new chapter
+            savedGame.put(FFG_CHAPTER, chapterIndexToSave);//the new chapter
+            savedGame.put(FFG_CURR_SCENE, FFG_SCENE_START);//the current SCENE in the chapter - it seems that this returns to the camp scene
+
+            //now prepare an array to indicate that all the previous scenes were completed
+            ArrayList<Integer> completedChapters = CampaignManager.getCompletedChapters(newCampaign, userChapter, chapterIndexToSave);
             savedGame.put(FFG_COMPLETED_CHAPTERS, new JSONArray(completedChapters));
 
         } catch (JSONException e) {
             Log.d(TAG, "setSavedGameChapter: JSON error. Could not put '" + FFG_CHAPTER + "' from saved game");
         }
-
-
     }
 
     //get the party name from the saved game object
@@ -373,13 +388,13 @@ class Utils {
     }
 
     //set the new party name
-    static void setSavedGamePartyName(int savedGameId,String partyName) {
+    static void setSavedGamePartyName(int savedGameId, String partyName) {
         Log.d(TAG, "setSavedGamePartyName: Enter");
         JSONObject jsonSavedGame = getSavedGamePartyNameObj(savedGameId);
         if (jsonSavedGame == null)
             return;
         try {
-            jsonSavedGame.put(FFG_PARTY_NAME,partyName);
+            jsonSavedGame.put(FFG_PARTY_NAME, partyName);
         } catch (JSONException e) {
             Log.d(TAG, "getSavedGamePartyName: JSON error. Could not get '" + FFG_PARTY_NAME + "' from saved game");
         }
@@ -388,11 +403,7 @@ class Utils {
     //get the JSON object where the party name is stored
     private static JSONObject getSavedGamePartyNameObj(int savedGameId) {
         //get the saved game
-        JSONObject savedGame = getSavedGame(savedGameId);
-        if (savedGame == null)
-            return null;
-
-        return savedGame;
+        return getSavedGame(savedGameId);
     }
 
     //get the difficulty of the saved game
@@ -419,7 +430,7 @@ class Utils {
             return;
 
         try {
-            jsonObj.put(FFG_DIFFICULTY,difficulty);
+            jsonObj.put(FFG_DIFFICULTY, difficulty);
         } catch (JSONException e) {
             Log.d(TAG, "setSavedGameDifficulty: JSON error. Could not get '" + FFG_DIFFICULTY + "' from saved game");
         }
@@ -472,8 +483,9 @@ class Utils {
 
 
         //if this is the first time then init the array
-        if (mSavedGames == null)
+        if (mSavedGames == null) {
             initSavedGameArray();
+        }
 
         //return the the right save game
         return mSavedGames.get(savedGameNum);
@@ -483,8 +495,9 @@ class Utils {
     //clear the save game cache array and create anew one
     private static void initSavedGameArray() {
         Log.d(TAG, "initSavedGameArray: Enter");
-        if (mSavedGames != null)
+        if (mSavedGames != null) {
             mSavedGames.clear();
+        }
 
         mSavedGames = new ArrayList<>();
         String[] filePaths = getValidSavedGamePaths();
@@ -556,8 +569,8 @@ class Utils {
     private static String[] getValidSavedGamePaths() {
         Log.d(TAG, "getValidSavedGamePaths: Enter");
         List<String> savedGamesPaths = new ArrayList<>();
-        //chec
-        for (int i = 0; i < MAX_SVAED_GAMES; i++) {
+        //check
+        for (int i = 0; i < MAX_SAVED_GAMES; i++) {
             String savedGamesPath = getSavedGamePath() + "/" + i;
             if (savedFilesExist(new File(savedGamesPath)))
                 savedGamesPaths.add(savedGamesPath);
@@ -582,10 +595,8 @@ class Utils {
         String fileContent;
         try {
 
-            String charset = null;//to avoid ambiguity
-            fileContent = FileUtils.readFileToString(file,charset);
-        }
-        catch (IOException e) {
+            fileContent = FileUtils.readFileToString(file, (String) null);
+        } catch (IOException e) {
             Log.d(TAG, "readSavedGame: failed to read file contents with error: " + e.getMessage());
             return null;
         }
@@ -603,28 +614,17 @@ class Utils {
     /**
      * This method converts dp unit to equivalent pixels, depending on device density.
      *
-     * @param dp A value in dp (density independent pixels) unit. Which we need to convert into pixels
+     * @param dp      A value in dp (density independent pixels) unit. Which we need to convert into pixels
      * @param context Context to get resources and device specific display metrics
      * @return A float value to represent px equivalent to dp depending on device density
      */
-    static int convertDpToPixel(float dp, Context context){
+    static int convertDpToPixel(float dp, Context context) {
         return Math.round(dp * ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT));
     }
 
-    /**
-     * This method converts device specific pixels to density independent pixels.
-     *
-     * @param px A value in px (pixels) unit. Which we need to convert into db
-     * @param context Context to get resources and device specific display metrics
-     * @return A float value to represent dp equivalent to px value
-     */
-    static int convertPixelsToDp(float px, Context context){
-        return Math.round(px / ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT));
-    }
-
-    //Backup all the files in a savegame folder
+    //Backup all the files in a save game folder
     //this is done simply by copying the files located there to a .bak files
-    private static boolean backupSavedGameFiles(Context context, int savedGameNum) {
+    private static boolean backupSavedGameFiles(int savedGameNum) {
         Log.d(TAG, "backupSavedGameFiles: Enter");
         String[] savedGamesPaths = getValidSavedGamePaths();
         if (savedGamesPaths.length < savedGameNum) {
@@ -633,9 +633,9 @@ class Utils {
         }
 
         String pathToSavedGame = savedGamesPaths[savedGameNum];
-        String[] fileNames = {SAVE_FILE_A_NAME,SAVE_FILE_B_NAME,LOG_FILE_A_NAME,LOG_FILE_B_NAME};
+        String[] fileNames = {SAVE_FILE_A_NAME, SAVE_FILE_B_NAME, LOG_FILE_A_NAME, LOG_FILE_B_NAME};
         try {
-            for (String fileName:fileNames) {
+            for (String fileName : fileNames) {
                 //check if a backup already exists and if so delete it
                 File backupFile = new File(pathToSavedGame + "/" + fileName + SAVE_FILE_BACKUP_EXT);
                 if (backupFile.exists()) {
@@ -647,7 +647,7 @@ class Utils {
                 //now backup the save game file
                 File srcFile = new File(pathToSavedGame + "/" + fileName);
                 if ((srcFile.exists()) && (backupFile.createNewFile())) {
-                    FileUtils.copyFile(srcFile,backupFile);
+                    FileUtils.copyFile(srcFile, backupFile);
                 }
             }
             return true;
@@ -658,7 +658,7 @@ class Utils {
     }
 
     //restore backup files to the save game files
-    static boolean restoreSavedGameFiles(Context context, int savedGameNum,boolean checkOnly) {
+    static boolean restoreSavedGameFiles(int savedGameNum, boolean checkOnly) {
         Log.d(TAG, "restoreSavedGameFiles: Enter");
         String[] savedGamesPaths = getValidSavedGamePaths();
         if (savedGamesPaths.length <= savedGameNum) {
@@ -669,8 +669,8 @@ class Utils {
         boolean restoreSuccess = false;
         //go over the files and check if there is a .bak file
         String pathToSavedGame = savedGamesPaths[savedGameNum];
-        String[] fileNames = {SAVE_FILE_A_NAME,SAVE_FILE_B_NAME,LOG_FILE_A_NAME,LOG_FILE_B_NAME};
-        for (String fileName:fileNames) {
+        String[] fileNames = {SAVE_FILE_A_NAME, SAVE_FILE_B_NAME, LOG_FILE_A_NAME, LOG_FILE_B_NAME};
+        for (String fileName : fileNames) {
             File buFile = new File(pathToSavedGame + "/" + fileName + SAVE_FILE_BACKUP_EXT);
             File gameFile = new File(pathToSavedGame + "/" + fileName);
             if (buFile.exists()) {
@@ -695,7 +695,7 @@ class Utils {
     }
 
     //Save the JSON save game structure that is currently in memory to a file
-    static boolean saveSavedGameToFile(Context context, int savedGameNum,boolean export) {
+    static boolean saveSavedGameToFile(Context context, int savedGameNum, boolean export) {
         Log.d(TAG, "saveSavedGameToFile: Enter");
         //check to see if the save game exists
         JSONObject savedGame = getSavedGame(savedGameNum);
@@ -704,7 +704,7 @@ class Utils {
         }
 
         //try to make a back up - if you fail do not change the actual files
-        if (!backupSavedGameFiles(context, savedGameNum)) {
+        if (!backupSavedGameFiles(savedGameNum)) {
             return false;
         }
 
@@ -715,9 +715,9 @@ class Utils {
         }
 
         //delete the current save game files
-        String[] fileNames = {SAVE_FILE_A_NAME,SAVE_FILE_B_NAME};
+        String[] fileNames = {SAVE_FILE_A_NAME, SAVE_FILE_B_NAME};
         String pathToSavedGame = savedGamesPaths[savedGameNum];
-        for (String fileName:fileNames) {
+        for (String fileName : fileNames) {
             File file = new File(pathToSavedGame + "/" + fileName);
             if ((file.exists()) && (!file.delete())) {
                 return false;
@@ -727,10 +727,9 @@ class Utils {
         //create a new file
         File newSavedGame = new File(pathToSavedGame + "/" + SAVE_FILE_A_NAME);
         try {
-            String encoding  = null;//to avoid ambiguity
-            FileUtils.writeStringToFile(newSavedGame, savedGame.toString(),encoding);
+            FileUtils.writeStringToFile(newSavedGame, savedGame.toString(), (String) null);
             //duplicate file A to file B - not sure why but all the ave game have it so....
-            FileUtils.copyFile(newSavedGame,new File(pathToSavedGame + "/" + SAVE_FILE_B_NAME) );
+            FileUtils.copyFile(newSavedGame, new File(pathToSavedGame + "/" + SAVE_FILE_B_NAME));
             //check if this is also an export operation
             if (export) {
                 //locate the downloads folder and copy the file there
@@ -740,7 +739,7 @@ class Utils {
                 if (exportFile.exists()) {
                     exportFile.delete();
                 }
-                FileUtils.copyFile(newSavedGame,exportFile);
+                FileUtils.copyFile(newSavedGame, exportFile);
             }
         } catch (IOException e) {
             Log.d(TAG, "saveSavedGameToFile: failed to write to saved game: " + savedGameNum + ". With error: " + e.getMessage());
@@ -752,11 +751,8 @@ class Utils {
     //check if the Read/Write permission has been already given to us
     static boolean arePermissionsNeeded(Activity requester) {
         Log.d(TAG, "arePermissionsNeeded: Enter");
-        if (requester.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            return true;
-        }
-        return false;
+        return requester.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED;
     }
 
     static void checkReadWritePermissions(final Activity requester) {
@@ -768,7 +764,7 @@ class Utils {
             if (requester.shouldShowRequestPermissionRationale(
                     Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                 //show a message explaining to the user why the Read/Write permission is needed
-                new AlertDialog.Builder(new ContextThemeWrapper(requester,R.style.AlertDialogTheme))
+                new AlertDialog.Builder(new ContextThemeWrapper(requester, R.style.AlertDialogTheme))
                         .setTitle(requester.getString(R.string.permission_request))
                         .setMessage(requester.getString(R.string.permission_request_msg))
                         // The dialog is automatically dismissed when a dialog button is clicked.
