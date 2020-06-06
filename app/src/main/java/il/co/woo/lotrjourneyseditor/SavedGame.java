@@ -29,6 +29,10 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.Arrays;
 import java.util.List;
 
+import il.co.woo.lotrjourneyseditor.campaign.CampaignData;
+import il.co.woo.lotrjourneyseditor.campaign.CampaignManager;
+import il.co.woo.lotrjourneyseditor.campaign.data.Utils;
+
 public class SavedGame extends AppCompatActivity implements View.OnClickListener, android.text.TextWatcher {
 
     private static final String TAG = "SavedGame";
@@ -283,7 +287,7 @@ public class SavedGame extends AppCompatActivity implements View.OnClickListener
 
         campaign++;//the campaign in the spinner is 0 based and in the file 1 based
         int savedChapter = chapterData.getChapterGameIndex() + spScene.getSelectedItemPosition();
-        Utils.setSavedGameCampaignAndChapter(saveGameIdx, campaign, chapterData.getNumber(), savedChapter);
+        Utils.setSavedGameCampaignAndChapterData(saveGameIdx, campaign, chapterData.getNumber(), savedChapter);
 
         //go over the heroes and update the XP
         int numOfHeroes = Utils.getSavedGameNumOfHeroes(saveGameIdx);

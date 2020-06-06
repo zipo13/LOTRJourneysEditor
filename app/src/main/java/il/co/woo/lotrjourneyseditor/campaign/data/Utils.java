@@ -1,4 +1,4 @@
-package il.co.woo.lotrjourneyseditor;
+package il.co.woo.lotrjourneyseditor.campaign.data;
 
 import android.Manifest;
 import android.app.Activity;
@@ -13,10 +13,12 @@ import android.util.Log;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.view.ContextThemeWrapper;
 
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
+
+import net.minidev.json.JSONArray;
+
 import org.apache.commons.io.FileUtils;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,14 +26,18 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-class Utils {
+import il.co.woo.lotrjourneyseditor.GameDifficulty;
+import il.co.woo.lotrjourneyseditor.R;
+import il.co.woo.lotrjourneyseditor.campaign.CampaignManager;
 
-    static final String INTENT_EXTRA_SAVE_GAME_ID_KEY = "SAVED_GAME_ID";
-    static final int PERMISSIONS_REQUEST_READ_WRITE_EXTERNAL_STORAGE = 5487;
+public class Utils {
+
+    public static final String INTENT_EXTRA_SAVE_GAME_ID_KEY = "SAVED_GAME_ID";
+    public static final int PERMISSIONS_REQUEST_READ_WRITE_EXTERNAL_STORAGE = 5487;
     private final static int MAX_SAVED_GAMES = 5;
 
     private static final String TAG = "Utils";
-    static final String LOTR_PKG_NAME = "com.fantasyflightgames.jime";
+    public static final String LOTR_PKG_NAME = "com.fantasyflightgames.jime";
     private static final String LOTR_FILE_PATH = "Android/data/" + LOTR_PKG_NAME;
     private static final String LOTR_SAVED_GAMES_PATH = LOTR_FILE_PATH + "/files/SavedGames";
     private static final String LOG_FILE_A_NAME = "LogA.txt";
@@ -40,23 +46,24 @@ class Utils {
     private static final String SAVE_FILE_B_NAME = "SavedGameB";
     private static final String SAVE_FILE_BACKUP_EXT = ".bak";
 
-    private static final String FFG_TIMESTAMP = "Timestamp";
+    private static final String FFG_TIMESTAMP = "$.Timestamp";
     private static final String JAN1ST1970 = "621355968000000000";
     private static final String TIME_DIV = "10000";
 
-    private static final String FFG_DIFFICULTY = "CampaignDifficulty";
+    private static final String FFG_DIFFICULTY = "$.CampaignDifficulty";
 
-    private static final String FFG_PARTY_NAME = "PartyName";
+    private static final String FFG_PARTY_NAME = "$.PartyName";
 
-    private static final String FFG_CAMPAIGN = "CampaignId";
-    private static final String FFG_CHAPTER = "CurrentAdventureId";
-    private static final String FFG_COMPLETED_CHAPTERS = "CompletedAdventureIds";
-    private static final String FFG_CURR_SCENE = "CurrentScene";
+    private static final String FFG_CAMPAIGN = "$.CampaignId";
+    private static final String FFG_CHAPTER = "$.CurrentAdventureId";
+    private static final String FFG_COMPLETED_CHAPTERS = "$.CompletedAdventureIds";
+    private static final String FFG_CURR_SCENE = "$.CurrentScene";
     private static final int FFG_SCENE_START = 10;
 
-    private static final String FFG_HEROINFO_ARRAY = "HeroInfo";
-    private static final String FFG_HEROINFO_ID = "Id";
-    private static final int FFG_HERO_ID_INVALID = -1;
+
+    private static final String FFG_HEROINFO_ID = "$.HeroInfo[%s].Id";
+    private static final String FFG_HEROINFO = "$.HeroInfo";
+    private static final int INVALID = -1;
 
     /*
     static final int FFG_HERO_ID_ARAGORN = 1;
@@ -67,189 +74,112 @@ class Utils {
     static final int FFG_HERO_ID_LEGOLAS = 6;
     */
 
-    private static final String FFG_GLOBAL_VARS = "GlobalVarData";
-    private static final String FFG_INT_VARS = "IntVars";
-
-    private static final String FFS_LAST_STAND = "LastStandsFailed";
-
-    private static final String FFG_NAME = "Name";
-    private static final String FFG_VALUE = "Value";
-    private static final String FFG_CAMP_LORE = "Campaign/Lore";
-
-    private static final String FFG_AVAIL_XP = "AvailableXP";
-    private static final String FFG_XP = "XP";
-    static final int FFG_INVALID_XP = -1;
+    private static final String FFS_LAST_STAND = "$.LastStandsFailed";
+    private static final String FFG_CAMP_LORE = "$.GlobalVarData.IntVars[?(@.Name == 'Campaign/Lore')].Value";
 
 
-    private static ArrayList<JSONObject> mSavedGames = null;
+    private static final String FFG_AVAIL_XP = "$.HeroInfo[%s].AvailableXP[0].XP";
+    public static final int FFG_INVALID_XP = -1;
 
-    //get the XP of a specific hero
-    static int getSaveGameHeroXP(int savedGameId, int heroIdx) {
-        Log.d(TAG, "getSaveGameHeroXP: Enter");
-        //get the saved game
-        JSONObject heroXpObj = getSaveGameHeroXPObj(savedGameId, heroIdx);
-        if (heroXpObj == null)
-            return FFG_INVALID_XP;
 
-        try {
-            return heroXpObj.getInt(FFG_XP);
+    private static ArrayList<DocumentContext> mSavedGames = null;
 
-        } catch (JSONException e) {
-            Log.d(TAG, "getSaveGameHeroXP: JSON error. Could not get '" + FFG_XP + "' from saved game");
+
+    private static String getStringValueAtPath(int savedGameId, String path) {
+        Log.d(TAG, "getStringValueAtPath: Enter");
+
+        DocumentContext savedGame = getSavedGame(savedGameId);
+        if (savedGame == null) {
+            Log.d(TAG, "getStringValueAtPath: invalid save game or hero index");
         }
 
-        return FFG_INVALID_XP;
+        try {
+            return savedGame.read(path).toString();
+
+        } catch (Exception e) {
+            Log.d(TAG, "getStringValueAtPath: JSON error. Could not get '" + path + "' from saved game");
+        }
+
+        return null;
+    }
+
+    public static void setValueAtPath(int savedGameId, String path, Object value) {
+        Log.d(TAG, "setValueAtPath: Enter");
+
+        DocumentContext savedGame = getSavedGame(savedGameId);
+        if (savedGame == null) {
+            Log.d(TAG, "setValueAtPath: invalid save game or hero index");
+        }
+
+        try {
+            savedGame.set(path, value);
+
+        } catch (Exception e) {
+            Log.d(TAG, "setValueAtPath: JSON error. Could not get '" + path + "' from saved game");
+        }
+    }
+
+    private static int getIntValueAtPath(int savedGameId, String path) {
+        Log.d(TAG, "getIntValueAtPath: Enter");
+
+        DocumentContext savedGame = getSavedGame(savedGameId);
+        if (savedGame == null) {
+            Log.d(TAG, "getIntValueAtPath: invalid save game or hero index");
+        }
+
+        try {
+            Object result = savedGame.read(path);
+            if (result.getClass() == Integer.class) {
+                return ((Integer) result);
+            } else if (result.getClass() == JSONArray.class) {
+                return (int) ((JSONArray) result).get(0);
+            }
+        } catch (Exception e) {
+            Log.d(TAG, "getIntValueAtPath: JSON error. Could not get '" + path + "' from saved game");
+        }
+
+        return INVALID;
+    }
+
+    //get the XP of a specific hero
+    public static int getSaveGameHeroXP(int savedGameId, int heroIdx) {
+        Log.d(TAG, "getSaveGameHeroXP: Enter");
+        return getIntValueAtPath(savedGameId, String.format(FFG_AVAIL_XP, heroIdx));
     }
 
 
     //set the XP of a hero
-    static void setSaveGameHeroXP(int savedGameId, int heroIdx, int xp) {
+    public static void setSaveGameHeroXP(int savedGameId, int heroIdx, int xp) {
         Log.d(TAG, "setSaveGameHeroXP: Enter");
-        //get the saved game
-        JSONObject heroXpObj = getSaveGameHeroXPObj(savedGameId, heroIdx);
-        if (heroXpObj == null)
-            return;
-
-        try {
-            heroXpObj.put(FFG_XP, xp);
-
-        } catch (JSONException e) {
-            Log.d(TAG, "setSaveGameHeroXP: JSON error. Could not set '" + FFG_XP + "' from saved game");
-        }
+        setValueAtPath(savedGameId, String.format(FFG_AVAIL_XP, heroIdx), xp);
     }
-
-    //get the JSON OBJECT that holds the wanted hero XP value
-    private static JSONObject getSaveGameHeroXPObj(int savedGameId, int heroIdx) {
-        Log.d(TAG, "getSaveGameHeroXPObj: Enter");
-        //get the saved game
-        JSONObject savedGame = getSavedGame(savedGameId);
-        if ((savedGame == null) || (heroIdx < 0)) {
-            Log.d(TAG, "getSaveGameHeroXPObj: invalid save game or hero index");
-            return null;
-        }
-
-        try {
-            //get the heroes array
-            JSONArray jsonArr = savedGame.getJSONArray(FFG_HEROINFO_ARRAY);
-            if (heroIdx >= jsonArr.length())
-                return null;
-
-            //get the correct hero
-            JSONObject jsonHero = jsonArr.getJSONObject(heroIdx);
-            if (jsonHero != null) {
-                JSONArray availXP = jsonHero.getJSONArray(FFG_AVAIL_XP);
-                return availXP.getJSONObject(0);
-
-            }
-
-        } catch (JSONException e) {
-            Log.d(TAG, "getSaveGameHeroXP: JSON error. Could not get '" + FFG_HEROINFO_ARRAY + "' from saved game");
-        }
-
-        return null;
-    }
-
 
     //get the number of last stands saved in the save game
-    static int getSavedGameLastStands(int savedGameId) {
+    public static int getSavedGameLastStands(int savedGameId) {
         Log.d(TAG, "getSavedGameLastStands: Enter");
-        //get the saved game
-        JSONObject lastStandObj = getSavedGameLastStandsObj(savedGameId);
-        if (lastStandObj == null)
-            return 0;
-
-        int numberOfLastStandsFailed = 0;
-        try {
-            numberOfLastStandsFailed = lastStandObj.getInt(FFS_LAST_STAND);
-        } catch (JSONException e) {
-            Log.d(TAG, "getSavedGameLastStands: JSON error. Could not get '" + FFS_LAST_STAND + "' from saved game");
-        }
-
-        return numberOfLastStandsFailed;
-
+        return getIntValueAtPath(savedGameId, FFS_LAST_STAND);
     }
 
     //set the last stands of the party
-    static void setSavedGameLastStands(int savedGameId, int lastStands) {
+    public static void setSavedGameLastStands(int savedGameId, int lastStands) {
         Log.d(TAG, "setSavedGameLastStands: Enter");
-        //get the saved game
-        JSONObject lastStandObj = getSavedGameLastStandsObj(savedGameId);
-        if (lastStandObj == null)
-            return;
-
-        try {
-            lastStandObj.put(FFS_LAST_STAND, lastStands);
-        } catch (JSONException e) {
-            Log.d(TAG, "setSavedGameLastStands: JSON error. Could not get '" + FFS_LAST_STAND + "' from saved game");
-        }
-    }
-
-    //get the saved game JSON object that holds the last stand
-    private static JSONObject getSavedGameLastStandsObj(int savedGameId) {
-        Log.d(TAG, "getSavedGameLastStandsObj: Enter");
-        //get the saved game
-        return getSavedGame(savedGameId);
+        setValueAtPath(savedGameId, FFS_LAST_STAND, lastStands);
     }
 
     //get the lore of the saved game
-    static int getSavedGameLore(int savedGameId) {
+    public static int getSavedGameLore(int savedGameId) {
         Log.d(TAG, "getSavedGameLore: Enter");
-
-        try {
-            JSONObject jsonObj = getSavedGameLoreObj(savedGameId);
-            if (jsonObj != null) {
-                return jsonObj.getInt(FFG_VALUE);
-            }
-        } catch (JSONException e) {
-            Log.d(TAG, "getSavedGameLore: JSON error. Could not get '" + FFG_VALUE + "' from saved game");
-        }
-        return 0;
+        return getIntValueAtPath(savedGameId, FFG_CAMP_LORE);
     }
 
     //set the lore saved in the saved game
-    static void setSavedGameLore(int savedGameId, int lore) {
+    public static void setSavedGameLore(int savedGameId, int lore) {
         Log.d(TAG, "setSavedGameLore: Enter");
-        //get the saved game
-        try {
-            JSONObject jsonObj = getSavedGameLoreObj(savedGameId);
-            if (jsonObj != null) {
-                jsonObj.put(FFG_VALUE, lore);
-            }
-        } catch (JSONException e) {
-            Log.d(TAG, "setSavedGameLore: JSON error. Could not get '" + FFG_VALUE + "' from saved game");
-        }
-    }
-
-    //get the JSON object that holds the lore
-    private static JSONObject getSavedGameLoreObj(int savedGameId) {
-        Log.d(TAG, "getSavedGameLoreObj: Enter");
-        //get the saved game
-        JSONObject savedGame = getSavedGame(savedGameId);
-        if (savedGame == null)
-            return null;
-
-        try {
-
-            //the lore is held in global vars in int vars
-            JSONObject jsonObjGlobalVars = savedGame.getJSONObject(FFG_GLOBAL_VARS);
-            JSONArray jsonArr = jsonObjGlobalVars.getJSONArray(FFG_INT_VARS);
-
-            for (int i = 0; i < jsonArr.length(); i++) {
-                JSONObject jsonObj = jsonArr.getJSONObject(i);
-                if (jsonObj.getString(FFG_NAME).compareTo(FFG_CAMP_LORE) == 0) {
-                    return jsonObj;
-                }
-
-            }
-
-        } catch (JSONException e) {
-            Log.d(TAG, "getSavedGameHeroType: JSON error. Could not get '" + FFG_GLOBAL_VARS + "' from saved game");
-        }
-        return null;
+        setValueAtPath(savedGameId, FFG_CAMP_LORE, lore);
     }
 
     //get the hero name from its type
-    static String getHeroNameFromType(Context context, int heroType) {
+    public static String getHeroNameFromType(Context context, int heroType) {
         String[] heroNames = context.getResources().getStringArray(R.array.hero_names);
         heroType--;//the heroType is 1 based and the array is 0 based
         if (heroType < heroNames.length) {
@@ -260,211 +190,95 @@ class Utils {
 
     //get the hero type from the saved game
     //the hero types (gimly, legolas ...) are actually just numbered from 1-6 making it easy to math a picture to them
-    static int getSavedGameHeroType(int savedGameId, int heroIdx) {
+    public static int getSavedGameHeroType(int savedGameId, int heroIdx) {
         Log.d(TAG, "getSavedGameHeroType: Enter");
-        //get the saved game
-        JSONObject savedGame = getSavedGame(savedGameId);
-        if ((savedGame == null) || (heroIdx < 0))
-            return FFG_HERO_ID_INVALID;
-
-        try {
-
-            //check that the wanted hero exist
-            JSONArray jsonArr = savedGame.getJSONArray(FFG_HEROINFO_ARRAY);
-            if (heroIdx >= jsonArr.length())
-                return FFG_HERO_ID_INVALID;
-
-
-            //get the ID
-            JSONObject jsonHero = jsonArr.getJSONObject(heroIdx);
-            if (jsonHero != null) {
-                return jsonHero.getInt(FFG_HEROINFO_ID);
-            }
-
-        } catch (JSONException e) {
-            Log.d(TAG, "getSavedGameHeroType: JSON error. Could not get '" + FFG_HEROINFO_ARRAY + "' from saved game");
-        }
-
-        return FFG_HERO_ID_INVALID;
+        return getIntValueAtPath(savedGameId, String.format(FFG_HEROINFO_ID, heroIdx));
     }
 
     //get the number of heroes in this saved game
-    static int getSavedGameNumOfHeroes(int savedGameId) {
+    public static int getSavedGameNumOfHeroes(int savedGameId) {
         Log.d(TAG, "getSavedGameNumOfHeroes: Enter");
-        //get the saved game
-        JSONObject savedGame = getSavedGame(savedGameId);
-        if (savedGame == null)
-            return 0;
-
-        try {
-
-            //the heroes are save in hero array. So the length of it is actually the number of heroes
-            JSONArray jsonArr = savedGame.getJSONArray(FFG_HEROINFO_ARRAY);
-            return jsonArr.length();
-
-        } catch (JSONException e) {
-            Log.d(TAG, "getSavedGameNumOfHeroes: JSON error. Could not get '" + FFG_HEROINFO_ARRAY + "' from saved game");
+        DocumentContext savedGame = getSavedGame(savedGameId);
+        if (savedGame == null) {
+            Log.d(TAG, "getSavedGameNumOfHeroes: invalid save game or hero index");
         }
 
+        try {
+            JSONArray heroes = savedGame.read(FFG_HEROINFO);
+            return heroes.size();
+
+        } catch (Exception e) {
+            Log.d(TAG, "getSavedGameNumOfHeroes: JSON error. Could not get '" + FFG_HEROINFO + "' from saved game");
+        }
         return 0;
     }
 
     //get the current chapter from the saved game
-
-    static int getSavedGameCampaign(int savedGameId) {
+    public static int getSavedGameCampaign(int savedGameId) {
         Log.d(TAG, "getSavedGameCampaign: Enter");
-        //get the saved game
-        JSONObject savedGame = getSavedGame(savedGameId);
-        if (savedGame == null)
-            return 0;
-
-        int campign = 0;
-        try {
-            campign = savedGame.getInt(FFG_CAMPAIGN);
-        } catch (JSONException e) {
-            Log.d(TAG, "getSavedGameCampaign: JSON error. Could not get '" + FFG_CAMPAIGN + "' from saved game");
-        }
-
-        return campign;
+        return getIntValueAtPath(savedGameId, FFG_CAMPAIGN);
     }
 
     //get the current chapter from the saved game
-    static int getSavedGameChapter(int savedGameId) {
+    public static int getSavedGameChapter(int savedGameId) {
         Log.d(TAG, "getSavedGameChapter: Enter");
-        //get the saved game
-        JSONObject savedGame = getSavedGame(savedGameId);
-        if (savedGame == null)
-            return 0;
-
-        int campaign = getSavedGameCampaign(savedGameId);
-        int chapter = 0;
-        try {
-            chapter = savedGame.getInt(FFG_CHAPTER);
-        } catch (JSONException e) {
-            Log.d(TAG, "getSavedGameChapter: JSON error. Could not get '" + FFG_CHAPTER + "' from saved game");
-        }
-
-        return chapter;
+        return getIntValueAtPath(savedGameId, FFG_CHAPTER);
     }
 
     //change the saved game chapter
-    static void setSavedGameCampaignAndChapter(int savedGameId, int newCampaign, int userChapter, int chapterIndexToSave) {
+    public static void setSavedGameCampaignAndChapterData(int savedGameId, int newCampaign, int userChapter, int chapterIndexToSave) {
         Log.d(TAG, "setSavedGameChapter: Enter");
         //get the saved game
-        JSONObject savedGame = getSavedGame(savedGameId);
+        DocumentContext savedGame = getSavedGame(savedGameId);
         if (savedGame == null)
             return;
 
         try {
             //set the needed parameters
-            savedGame.put(FFG_CAMPAIGN, newCampaign);//the new chapter
-            savedGame.put(FFG_CHAPTER, chapterIndexToSave);//the new chapter
-            savedGame.put(FFG_CURR_SCENE, FFG_SCENE_START);//the current SCENE in the chapter - it seems that this returns to the camp scene
+            savedGame.set(FFG_CAMPAIGN, newCampaign);//the new chapter
+            savedGame.set(FFG_CHAPTER, chapterIndexToSave);//the new chapter
+            savedGame.set(FFG_CURR_SCENE, FFG_SCENE_START);//the current SCENE in the chapter - it seems that this returns to the camp scene
 
             //now prepare an array to indicate that all the previous scenes were completed
             ArrayList<Integer> completedChapters = CampaignManager.getCompletedChapters(newCampaign, userChapter, chapterIndexToSave);
-            savedGame.put(FFG_COMPLETED_CHAPTERS, new JSONArray(completedChapters));
+            CampaignManager.doChapterSpecificActions(savedGameId, newCampaign, userChapter);
+            savedGame.set(FFG_COMPLETED_CHAPTERS, completedChapters);
 
-        } catch (JSONException e) {
-            Log.d(TAG, "setSavedGameChapter: JSON error. Could not put '" + FFG_CHAPTER + "' from saved game");
+        } catch (Exception e) {
+            Log.d(TAG, "setSavedGameChapter: JSON error. Could not set save game details");
         }
     }
 
     //get the party name from the saved game object
-    static String getSavedGamePartyName(int savedGameId) {
+    public static String getSavedGamePartyName(int savedGameId) {
         Log.d(TAG, "getSavedGamePartyName: Enter");
-        JSONObject jsonSavedGame = getSavedGamePartyNameObj(savedGameId);
-        if (jsonSavedGame == null) {
-            return "";
-        }
-
-        try {
-            return jsonSavedGame.getString(FFG_PARTY_NAME);
-        } catch (JSONException e) {
-            Log.d(TAG, "getSavedGamePartyName: JSON error. Could not get '" + FFG_PARTY_NAME + "' from saved game");
-        }
-
-        return "";
+        return getStringValueAtPath(savedGameId, FFG_PARTY_NAME);
     }
 
     //set the new party name
-    static void setSavedGamePartyName(int savedGameId, String partyName) {
+    public static void setSavedGamePartyName(int savedGameId, String partyName) {
         Log.d(TAG, "setSavedGamePartyName: Enter");
-        JSONObject jsonSavedGame = getSavedGamePartyNameObj(savedGameId);
-        if (jsonSavedGame == null)
-            return;
-        try {
-            jsonSavedGame.put(FFG_PARTY_NAME, partyName);
-        } catch (JSONException e) {
-            Log.d(TAG, "getSavedGamePartyName: JSON error. Could not get '" + FFG_PARTY_NAME + "' from saved game");
-        }
-    }
-
-    //get the JSON object where the party name is stored
-    private static JSONObject getSavedGamePartyNameObj(int savedGameId) {
-        //get the saved game
-        return getSavedGame(savedGameId);
+        setValueAtPath(savedGameId, FFG_PARTY_NAME, partyName);
     }
 
     //get the difficulty of the saved game
-    static GameDifficulty getSavedGameDifficulty(int savedGameId) {
-        JSONObject jsonObj = getSavedGameDifficultyObj(savedGameId);
-        if (jsonObj == null)
-            return GameDifficulty.NORMAL;
-
-        try {
-            int savedDifficulty = jsonObj.getInt(FFG_DIFFICULTY);
-            return GameDifficulty.values()[savedDifficulty];
-        } catch (JSONException e) {
-            Log.d(TAG, "getSavedGameDifficulty: JSON error. Could not get a valid '" + FFG_DIFFICULTY + "' from saved game");
-        }
-
-        return GameDifficulty.NORMAL;
+    public static GameDifficulty getSavedGameDifficulty(int savedGameId) {
+        int difficulty = getIntValueAtPath(savedGameId, FFG_DIFFICULTY);
+        return GameDifficulty.values()[difficulty];
     }
 
     //set the new difficulty
-    static void setSavedGameDifficulty(int savedGameId, int difficulty) {
+    public static void setSavedGameDifficulty(int savedGameId, int difficulty) {
         Log.d(TAG, "setSavedGameDifficulty: Enter");
-        JSONObject jsonObj = getSavedGameDifficultyObj(savedGameId);
-        if (jsonObj == null)
-            return;
-
-        try {
-            jsonObj.put(FFG_DIFFICULTY, difficulty);
-        } catch (JSONException e) {
-            Log.d(TAG, "setSavedGameDifficulty: JSON error. Could not get '" + FFG_DIFFICULTY + "' from saved game");
-        }
+        setValueAtPath(savedGameId, FFG_DIFFICULTY, difficulty);
     }
-
-    //get the JSON object where the difficulty is stored
-    private static JSONObject getSavedGameDifficultyObj(int savedGameId) {
-        //get the saved game
-        JSONObject savedGame = getSavedGame(savedGameId);
-        if (savedGame == null)
-            return null;
-
-        return getSavedGame(savedGameId);
-    }
-
 
     //get the date and date of the saved game
     //save game is save in .NET format meaning 0 is the year 0
     //this mean that we need to convert it to ANDROID time which begins in 1970
-    static long getSavedGameDate(int savedGameId) {
+    public static long getSavedGameDate(int savedGameId) {
         Log.d(TAG, "getSavedGameDate: Enter");
-
-        //get the saved game
-        JSONObject jsonObj = getSavedGame(savedGameId);
-        if (jsonObj == null)
-            return 0;
-
-        String epoch = "";
-        try {
-            epoch = jsonObj.getString(FFG_TIMESTAMP);
-        } catch (JSONException e) {
-            Log.d(TAG, "getSavedGameDate: JSON error. Could not get '" + FFG_TIMESTAMP + "' from saved game");
-        }
-
+        String epoch = getStringValueAtPath(savedGameId, FFG_TIMESTAMP);
         //convert to a BigInteger since the number is VERY big
         BigInteger dateBig = new BigInteger(epoch);
         BigInteger base = new BigInteger(JAN1ST1970);
@@ -474,7 +288,7 @@ class Utils {
 
 
     //get a save game JSON object from the cached array
-    private static JSONObject getSavedGame(int savedGameNum) {
+    private static DocumentContext getSavedGame(int savedGameNum) {
         Log.d(TAG, "getSavedGame: Enter");
         if (savedGameNum >= getNumberOfSavedGames()) {
             Log.d(TAG, "getSavedGame: wanted save game index out of range of saved game array");
@@ -506,13 +320,13 @@ class Utils {
         }
     }
 
-    //simple clear of the save game chache data to force the app to reload next time its accessed
-    static void clearSavedGameData() {
+    //simple clear of the save game cache data to force the app to reload next time its accessed
+    public static void clearSavedGameData() {
         initSavedGameArray();
     }
 
     //check for the LOTR JIME package
-    static boolean lotrAppInstalled(Context context) {
+    public static boolean lotrAppInstalled(Context context) {
         Log.d(TAG, "lotrAppInstalled: Enter");
         try {
             ApplicationInfo info = context.getPackageManager().
@@ -580,12 +394,12 @@ class Utils {
     }
 
     //simply get the number of saved game located on the device
-    static int getNumberOfSavedGames() {
+    public static int getNumberOfSavedGames() {
         return getValidSavedGamePaths().length;
     }
 
     //helper function to read the save game data from a file
-    private static JSONObject readSavedGame(File file) {
+    private static DocumentContext readSavedGame(File file) {
         Log.d(TAG, "readSavedGame: Enter");
 
         //check that the file is present and ready
@@ -601,10 +415,10 @@ class Utils {
             return null;
         }
 
-        JSONObject jsonObj = null;
+        DocumentContext jsonObj = null;
         try {
-            jsonObj = new JSONObject(fileContent);
-        } catch (org.json.JSONException e) {
+            jsonObj = JsonPath.parse(fileContent);
+        } catch (Exception e) {
             Log.d(TAG, "readSavedGame: failed to convert file content to JSON with error: " + e.getMessage());
         }
         return jsonObj;
@@ -618,7 +432,7 @@ class Utils {
      * @param context Context to get resources and device specific display metrics
      * @return A float value to represent px equivalent to dp depending on device density
      */
-    static int convertDpToPixel(float dp, Context context) {
+    public static int convertDpToPixel(float dp, Context context) {
         return Math.round(dp * ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT));
     }
 
@@ -658,7 +472,7 @@ class Utils {
     }
 
     //restore backup files to the save game files
-    static boolean restoreSavedGameFiles(int savedGameNum, boolean checkOnly) {
+    public static boolean restoreSavedGameFiles(int savedGameNum, boolean checkOnly) {
         Log.d(TAG, "restoreSavedGameFiles: Enter");
         String[] savedGamesPaths = getValidSavedGamePaths();
         if (savedGamesPaths.length <= savedGameNum) {
@@ -695,10 +509,10 @@ class Utils {
     }
 
     //Save the JSON save game structure that is currently in memory to a file
-    static boolean saveSavedGameToFile(Context context, int savedGameNum, boolean export) {
+    public static boolean saveSavedGameToFile(Context context, int savedGameNum, boolean export) {
         Log.d(TAG, "saveSavedGameToFile: Enter");
         //check to see if the save game exists
-        JSONObject savedGame = getSavedGame(savedGameNum);
+        DocumentContext savedGame = getSavedGame(savedGameNum);
         if (savedGame == null) {
             return false;
         }
@@ -727,7 +541,7 @@ class Utils {
         //create a new file
         File newSavedGame = new File(pathToSavedGame + "/" + SAVE_FILE_A_NAME);
         try {
-            FileUtils.writeStringToFile(newSavedGame, savedGame.toString(), (String) null);
+            FileUtils.writeStringToFile(newSavedGame, savedGame.jsonString(), (String) null);
             //duplicate file A to file B - not sure why but all the ave game have it so....
             FileUtils.copyFile(newSavedGame, new File(pathToSavedGame + "/" + SAVE_FILE_B_NAME));
             //check if this is also an export operation
@@ -749,13 +563,13 @@ class Utils {
 
 
     //check if the Read/Write permission has been already given to us
-    static boolean arePermissionsNeeded(Activity requester) {
+    public static boolean arePermissionsNeeded(Activity requester) {
         Log.d(TAG, "arePermissionsNeeded: Enter");
         return requester.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED;
     }
 
-    static void checkReadWritePermissions(final Activity requester) {
+    public static void checkReadWritePermissions(final Activity requester) {
         Log.d(TAG, "checkReadWritePermissions: Enter");
         if (requester.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {

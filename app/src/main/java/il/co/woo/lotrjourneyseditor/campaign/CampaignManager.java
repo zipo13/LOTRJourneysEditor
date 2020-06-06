@@ -1,15 +1,20 @@
-package il.co.woo.lotrjourneyseditor;
+package il.co.woo.lotrjourneyseditor.campaign;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-class CampaignManager {
+import il.co.woo.lotrjourneyseditor.ChapterData;
+import il.co.woo.lotrjourneyseditor.JIMEApp;
+import il.co.woo.lotrjourneyseditor.R;
+import il.co.woo.lotrjourneyseditor.campaign.embercrown.Chapter8;
+
+public class CampaignManager {
 
     private static ArrayList<CampaignData> campaigns;
 
-    static List<CampaignData> getCampaigns() {
+    public static List<CampaignData> getCampaigns() {
         if (campaigns == null) {
             campaigns = new ArrayList<>();
             campaigns.add(createBonesOfArnorCampaign());
@@ -18,7 +23,7 @@ class CampaignManager {
         return campaigns;
     }
 
-    static CampaignData getCampaignByIndex(int campaignIndex) {
+    public static CampaignData getCampaignByIndex(int campaignIndex) {
         for (CampaignData campaign : getCampaigns()) {
             if (campaign.getCampaignIndex() == campaignIndex) {
                 return campaign;
@@ -27,7 +32,7 @@ class CampaignManager {
         return null;
     }
 
-    static int savedGameChapterToChapterNumber(int savedGameChapter) {
+    public static int savedGameChapterToChapterNumber(int savedGameChapter) {
         for (CampaignData campaign : getCampaigns()) {
             ArrayList<ChapterData> chapters = campaign.getChapters();
             for (ChapterData chapter : chapters) {
@@ -40,7 +45,7 @@ class CampaignManager {
     }
 
 
-    static String savedGameChapterToChapterName(int savedGameChapter) {
+    public static String savedGameChapterToChapterName(int savedGameChapter) {
         for (CampaignData campaign : getCampaigns()) {
             ArrayList<ChapterData> chapters = campaign.getChapters();
             for (ChapterData chapter : chapters) {
@@ -52,13 +57,20 @@ class CampaignManager {
         return "";
     }
 
-    static ArrayList<Integer> getCompletedChapters(int campaign, int userChapter, int saveGameChapter) {
+    public static ArrayList<Integer> getCompletedChapters(int campaign, int userChapter, int saveGameChapter) {
         ArrayList<Integer> completedChapters = new ArrayList<>();
         CampaignData campaignData = getCampaignByIndex(campaign);
         for (int i = 0; i < userChapter - 1; i++) {
             completedChapters.add(campaignData.getChapters().get(i).getCompletedChaptersIndexes(saveGameChapter, completedChapters));
         }
         return completedChapters;
+    }
+
+    public static void doChapterSpecificActions(int saveGameId, int campaign, int userChapter) {
+        CampaignData campaignData = getCampaignByIndex(campaign);
+        for (int i = 0; i < userChapter; i++) {
+            campaignData.getChapters().get(i).doChapterActions(saveGameId);
+        }
     }
 
     private static CampaignData createBonesOfArnorCampaign() {
@@ -93,7 +105,7 @@ class CampaignManager {
         chapters.add(new ChapterData(5, 19, Arrays.asList("A Misplaced Gift", "Farmer Maggot's Mushrooms", "The Trading Post")));
         chapters.add(new ChapterData(6, 22, Collections.singletonList("A Rift in the Blue Mountains")));
         chapters.add(new ChapterData(7, 23, Arrays.asList("In the Halls of Broadbeams", "Keepers of the Vally")));
-        chapters.add(new ChapterData(8, 27, Collections.singletonList("The Ember Crown")));
+        chapters.add(new Chapter8(8, 27, Collections.singletonList("The Ember Crown")));
         chapters.add(new ChapterData(9, 28, Collections.singletonList("Coalfang")));
 
         int campaignIndex = 1;

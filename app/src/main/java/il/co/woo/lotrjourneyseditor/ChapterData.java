@@ -39,4 +39,7 @@ public class ChapterData {
         }
         return null;
     }
+
+    public void doChapterActions(int savedGameId) {
+    }
 }

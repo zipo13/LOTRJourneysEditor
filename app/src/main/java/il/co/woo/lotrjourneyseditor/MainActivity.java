@@ -35,6 +35,9 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+import il.co.woo.lotrjourneyseditor.campaign.CampaignManager;
+import il.co.woo.lotrjourneyseditor.campaign.data.Utils;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
@@ -159,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
     private void loadSavedGamesDetails() {
         Log.d(TAG, "loadSavedGamesDetails: Enter");
 
-        //populate some textviews with information about locating the LOTR JIME app
+        //populate some text views with information about locating the LOTR JIME app
         Button ffgLinkButton = findViewById(R.id.ffg_jime_link_button);
         if (Utils.lotrAppInstalled(this)) {
             findViewById(R.id.app_installed_status).setVisibility(View.GONE);

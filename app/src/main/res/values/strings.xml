@@ -34,7 +34,7 @@
     <string name="download_it_now">Download it now</string>
     <string name="app_info">Application info</string>
     <string name="credits_title">Credits</string>
-    <string name="credits_msg">Thanks for everyone who helped to build this app.  Icons for this app are from https://icons8.com</string>
+    <string name="credits_msg">Thanks for everyone who helped to build this app.  Icons for this app are from https://icons8.com\n\nSpecial thanks to Francesc Lopez for helping me debug the Ember Crown campaign</string>
     <string name="nullValue">null</string>
     <string name="chapter_scene">Chapter Scene</string>
     <string-array name="hero_names">

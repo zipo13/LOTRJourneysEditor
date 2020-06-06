@@ -1,7 +1,8 @@
-package il.co.woo.lotrjourneyseditor;
+package il.co.woo.lotrjourneyseditor.campaign;
 
 import java.util.ArrayList;
 
+import il.co.woo.lotrjourneyseditor.ChapterData;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
