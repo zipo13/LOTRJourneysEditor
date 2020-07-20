@@ -44,10 +44,16 @@
         <item>Elena</item>
         <item>Gimli</item>
         <item>Legolas</item>
+        <item>Arwen</item>
+        <item>Gandalf</item>
+        <item>Eleanor</item>
+        <item>Dis</item>
+        <item>Balin</item>
     </string-array>
     <string-array name="campaign_names">
         <item>Bones of Arnor</item>
         <item>Hunt for the Ember Crown</item>
+        <item>Shadowed Paths</item>
     </string-array>
     <string-array name="chapter_names_campaign_1">
         <item>Chapter 1</item>

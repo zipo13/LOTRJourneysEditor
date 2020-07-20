@@ -19,6 +19,7 @@ public class CampaignManager {
             campaigns = new ArrayList<>();
             campaigns.add(createBonesOfArnorCampaign());
             campaigns.add(createEmberCrownCampaign());
+            campaigns.add(createShadowedPathCampaign());
         }
         return campaigns;
     }
@@ -109,6 +110,27 @@ public class CampaignManager {
         chapters.add(new ChapterData(9, 28, Collections.singletonList("Coalfang")));
 
         int campaignIndex = 1;
+        String[] campaignNames = JIMEApp.getRes().getStringArray(R.array.campaign_names);
+        return new CampaignData(campaignNames[campaignIndex], campaignIndex + 1, chapters);
+    }
+
+
+    private static CampaignData createShadowedPathCampaign() {
+        ArrayList<ChapterData> chapters = new ArrayList<>();
+        chapters.add(new ChapterData(1, 29, Collections.singletonList("Into The Forest")));
+        chapters.add(new ChapterData(2, 30, Collections.singletonList("Court Of the Elvenking")));
+        chapters.add(new ChapterData(3, 31, Collections.singletonList("Web of Traps")));
+        chapters.add(new ChapterData(4, 32, Collections.singletonList("Ancient Evils")));
+        chapters.add(new ChapterData(5, 33, Collections.singletonList("Menace in Mirkwood")));
+        chapters.add(new ChapterData(6, 34, Collections.singletonList("Flies in the Web")));
+        chapters.add(new ChapterData(7, 35, Collections.singletonList("Straying from the Path")));
+        chapters.add(new ChapterData(8, 36, Collections.singletonList("Battle of River Running")));
+        chapters.add(new ChapterData(9, 37, Collections.singletonList("The Crown of Shadows")));
+        chapters.add(new ChapterData(10, 38, Collections.singletonList("Shadow and Flame")));
+        chapters.add(new ChapterData(11, 39, Collections.singletonList("The Black Pit")));
+        chapters.add(new ChapterData(12, 40, Collections.singletonList("In the Spider's Lair")));
+
+        int campaignIndex = 2;
         String[] campaignNames = JIMEApp.getRes().getStringArray(R.array.campaign_names);
         return new CampaignData(campaignNames[campaignIndex], campaignIndex + 1, chapters);
     }
